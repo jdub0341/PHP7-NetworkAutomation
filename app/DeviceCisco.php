@@ -8,16 +8,14 @@ use Metaclassing\SSH;
 use Nanigans\SingleTableInheritance\SingleTableInheritanceTrait;
 
 
-class Device extends Model
+class DeviceCisco extends Device
 {
     use SoftDeletes;
     use SingleTableInheritanceTrait;
 
-    protected $table = "devices";
-    protected static $singleTableTypeField = 'type';
     protected static $singleTableSubclasses = [DeviceCisco::class];
-    protected static $singleTableType = 'Device';
- 
+    protected static $singleTableType = 'DeviceCisco';
+
     protected $fillable = [
         'type',
         'ip',
@@ -38,10 +36,10 @@ class Device extends Model
     public function discover()
     {
         $match = [
-            'DeviceCisco'     =>  0,
-            'DeviceAruba'     =>  0,
-            'DeviceOpengear'  =>  0,
-            'DeviceUbiquiti'  =>  0,
+            'device.cisco'     =>  0,
+            'device.aruba'     =>  0,
+            'device.opengear'  =>  0,
+            'device.ubiquiti'  =>  0,
         ];
 
         $cli = $this->getCli();
@@ -52,8 +50,8 @@ class Device extends Model
         ];
 
         $regex = [
-            'DeviceCisco'  =>  '/cisco/i',
-            'DeviceAruba'  =>  '/aruba/i',
+            'device.cisco'  =>  '/cisco/i',
+            'device.aruba'  =>  '/aruba/i',
         ];
 
         foreach($commands as $command)
