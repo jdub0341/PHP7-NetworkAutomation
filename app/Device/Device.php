@@ -1,12 +1,11 @@
 <?php
 
-namespace App;
+namespace App\Device;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Metaclassing\SSH;
 use Nanigans\SingleTableInheritance\SingleTableInheritanceTrait;
-
 
 class Device extends Model
 {
@@ -15,8 +14,11 @@ class Device extends Model
 
     protected $table = "devices";
     protected static $singleTableTypeField = 'type';
-    protected static $singleTableSubclasses = [DeviceCisco::class];
-    protected static $singleTableType = 'Device';
+    protected static $singleTableSubclasses = [
+        Aruba\Aruba::class,
+        Cisco\Cisco::class,
+    ];
+    protected static $singleTableType = __CLASS__;
  
     protected $fillable = [
         'type',
@@ -30,56 +32,44 @@ class Device extends Model
 
     protected $casts = [
         'data' => 'array'
-   ];
+    ];
 
     public $username = "";
     public $password = "";
 
     public function discover()
     {
-        $match = [
-            'DeviceCisco'     =>  0,
-            'DeviceAruba'     =>  0,
-            'DeviceOpengear'  =>  0,
-            'DeviceUbiquiti'  =>  0,
-        ];
+        foreach(self::$singleTableSubclasses as $class)
+        {
+            $match[$class] = 0;
+            $tmp = explode('\\', $class);
+            $regex[$class] = "/" . end($tmp) . "/i";
+        } 
 
         $cli = $this->getCli();
         
         $commands = [
-            'ver'   =>  $cli->exec('sh ver'),
-            'inv'   =>  $cli->exec('show inventory'),
-        ];
-
-        $regex = [
-            'DeviceCisco'  =>  '/cisco/i',
-            'DeviceAruba'  =>  '/aruba/i',
+            'sh ver',
+            'show inventory',
         ];
 
         foreach($commands as $command)
         {
-            foreach($regex as $type => $reg)
+            $output = $cli->exec($command);
+            foreach($regex as $class => $reg)
             {
-                if(preg_match($reg,$command))
+                if(preg_match($reg,$output))
                 {
-                    $match[$type]++;
+                    $match[$class]++;
                 }
             }
         }
-        print_r($match);
-        $highcount = 0;
-        $newtype = "";
-        foreach($match as $type => $count)
-        {
-            if($count > $highcount)
-            {
-                $newtype = $type;
-            }
-        }
 
-        $this['data->newtype'] = $newtype;
+        arsort($match);
+        $tmp = array_keys($match);
+        $newtype = reset($tmp);
 
-        $this->save();
+        return $this->convertType($newtype)->discover();
     }
 
     public function deleteMe()
@@ -128,6 +118,16 @@ class Device extends Model
         $cli->exec('terminal length 0');
         $cli->exec('no paging');
         return $cli;
+    }
+
+    public function convertType($newtype)
+    {
+        return unserialize(sprintf(
+            'O:%d:"%s"%s',
+            strlen($newtype),
+            $newtype,
+            strstr(strstr(serialize($this), '"'), ':')
+        ));
     }
     
 }
