@@ -17,6 +17,7 @@ class Device extends Model
     protected static $singleTableSubclasses = [
         Aruba\Aruba::class,
         Cisco\Cisco::class,
+        Opengear\Opengear::class,
     ];
     protected static $singleTableType = __CLASS__;
  
@@ -51,6 +52,7 @@ class Device extends Model
         $commands = [
             'sh ver',
             'show inventory',
+            'cat /etc/config/support_report',
         ];
 
         foreach($commands as $command)

@@ -11,7 +11,8 @@
         "laravel/tinker": "~1.0",
         "metaclassing/php7-laravel5-enterpriseauth": "dev-master",
         "metaclassing/php7-sshwrapper": "dev-master",
-        "nanigans/single-table-inheritance": "0.8.*"
+        "nanigans/single-table-inheritance": "0.8.*",
+        "phpseclib/phpseclib": "~2.0"
     },
     "require-dev": {
         "filp/whoops": "~2.0",
