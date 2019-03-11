@@ -11,90 +11,24 @@ class Opengear extends \App\Device\Device
 
     protected static $singleTableType = __CLASS__;
 
-    public function discover()
+    public function getCli()
     {
-        print __CLASS__ . "\n";
-
-/*         foreach(self::$singleTableSubclasses as $class)
-        {
-            $match[$class] = 0;
-        }  */
-
-        $match = [
-
-        ];
-
-        $regex = [
-
-        ];
-
-        $cli = $this->getCli();
-
-        $commands = [
-
-        ];
-
-        foreach($commands as $command)
-        {
-            $output = $cli->exec($command);
-            foreach($regex as $class => $regs)
-            {
-                foreach($regs as $reg)
-                {
-                    if(preg_match($reg,$output))
-                    {
-                        $match[$class]++;
-                    }
-                }
-            }
-        }
-        arsort($match);
-        $tmp = array_keys($match);
-        $newtype = reset($tmp);
-
-        return $this->convertType($newtype)->discover();
-    }
-
-    public function getCli($ip = null, $username = null, $password = null)
-    {
-        if(!$ip)
-        {
-            $ip2 = $this->ip;
-        }
-        if(!$username)
-        {
-            if($this->username == "")
-            {
-                $username2 = env('DEFAULT_USERNAME');
-            } else {
-                $username2 = $this->username;
-            }
-        }
-        if(!$password)
-        {
-            if($this->password == "")
-            {
-                $password2 = env('DEFAULT_PASSWORD');
-            } else {
-                $password2 = $this->password;
-            }
-        }
-        $deviceinfo = [
-            'host'      =>  $ip2,
-            'username'  =>  $username2,
-            'password'  =>  $password2,
-        ];
-        print_r($deviceinfo);
+        $deviceinfo = $this->generateDeviceInfo();
         // Create a ssh object with our device information
         $ssh = new SSH2($deviceinfo['host']);
         if (!$ssh->login($deviceinfo['username'], $deviceinfo['password'])) {
             print "LOGIN FAILED!\n";
         }
 
-        // send the term len 0 command to stop paging output with ---more---
-        $return = $ssh->exec('cat /etc/config/support_report');
-        print $return;
-        //return $ssh;
+        return $ssh;
+    }
+
+    public function discover()
+    {
+        $this->save();
+        $this->scan();
+        print __CLASS__ . "\n";
+        return $this;
     }
 
     public function scan()
@@ -102,18 +36,41 @@ class Opengear extends \App\Device\Device
         $cli = $this->getCli();
         $data = $this->data;
 
-        $data['run'] = $cli->exec("sh run");
-        $data['version'] = $cli->exec("sh version");
-        $data['interfaces'] = $cli->exec("sh interfaces");
-        $data['inventory'] = $cli->exec("sh inventory");
-        $data['dir'] = $cli->exec("dir");
-
-        $data['cdp'] = $cli->exec("sh cdp neighbor");
-        $data['lldp'] = $cli->exec("sh lldp neighbor");
-
+        $cli->exec("/etc/scripts/support_report.sh");
+        $data['support_report'] = $cli->exec("cat /etc/config/support_report");
+        $data['run'] = $cli->exec("config -g config");
+        $data['version'] = $cli->exec("cat /etc/version");
+        $data['serial'] = $cli->exec("showserial");
 
         $this->data = $data;
+        $this->name = $this->getName();
+        $this->serial = $this->getSerial();
+        $this->model = $this->getModel();
         $this->save();
     }
+
+    public function getName()
+    {
+        $reg = "/config.system.name (\S+)/";
+        if(preg_match($reg,$this->data['run'], $hits))
+        {
+            return $hits[1];
+        }
+    }
+
+    public function getSerial()
+    {
+        return $this->data['serial'];
+    }
+
+    public function getModel()
+    {
+        $reg = "/<model>(\S+)<\/model>/";
+        if(preg_match($reg,$this->data['support_report'], $hits))
+        {
+            return $hits[1];
+        }
+    }
+
 
 }

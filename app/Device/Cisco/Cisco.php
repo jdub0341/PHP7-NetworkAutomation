@@ -2,6 +2,8 @@
 
 namespace App\Device\Cisco;
 
+use Metaclassing\SSH;
+
 class Cisco extends \App\Device\Device
 { 
     protected static $singleTableSubclasses = [
@@ -12,14 +14,25 @@ class Cisco extends \App\Device\Device
     ];
     protected static $singleTableType = __CLASS__;
 
+    public function getCli()
+    {
+        $deviceinfo = $this->generateDeviceInfo();
+        // Create a ssh object with our device information
+        try{
+            $cli = new SSH($deviceinfo);
+            $cli->connect();
+        } catch (\Exception $e) {
+
+        }
+
+        // send the term len 0 command to stop paging output with ---more---
+        $cli->exec('terminal length 0');
+        return $cli;
+    }
+
     public function discover()
     {
         print __CLASS__ . "\n";
-
-/*         foreach(self::$singleTableSubclasses as $class)
-        {
-            $match[$class] = 0;
-        }  */
 
         $match = [
             '\App\Device\Cisco\IOS'     =>  0,
@@ -70,7 +83,7 @@ class Cisco extends \App\Device\Device
         arsort($match);
         $tmp = array_keys($match);
         $newtype = reset($tmp);
-
+        $cli->disconnect();
         return $this->convertType($newtype)->discover();
     }
 
@@ -88,9 +101,65 @@ class Cisco extends \App\Device\Device
         $data['cdp'] = $cli->exec("sh cdp neighbor");
         $data['lldp'] = $cli->exec("sh lldp neighbor");
 
-
         $this->data = $data;
+        $this->name = $this->getName();
+        $this->serial = $this->getSerial();
+        $this->model = $this->getModel();
+
         $this->save();
+    }
+
+    public function getName()
+    {
+        $reg = "/hostname (\S+)/";
+        if(preg_match($reg,$this->data['run'], $hits))
+        {
+            return $hits[1];
+        }
+    }
+
+    public function getSerial()
+    {
+        $reg = "/^Processor board ID (\S+)/m";
+        if (preg_match($reg, $this->data['version'], $hits))
+        {
+            $serial = $hits[1];
+        }
+        return $serial;
+    }
+
+    public function getModel()
+    {
+        if (preg_match('/.*isco\s+(WS-\S+)\s.*/', $this->data['version'], $reg))
+        {
+        $model = $reg[1];
+
+        return $model;
+        }
+        if (preg_match('/.*isco\s+(OS-\S+)\s.*/', $this->data['version'], $reg))
+        {
+            $model = $reg[1];
+
+            return $model;
+        }
+        if (preg_match('/.*ardware:\s+(\S+),.*/', $this->data['version'], $reg))
+        {
+            $model = $reg[1];
+
+            return $model;
+        }
+        if (preg_match('/.*ardware:\s+(\S+).*/', $this->data['version'], $reg))
+        {
+            $model = $reg[1];
+
+            return $model;
+        }
+        if (preg_match('/^[c,C]isco\s(\S+)\s\(.*/m', $this->data['version'], $reg))
+        {
+            $model = $reg[1];
+
+            return $model;
+        }
     }
 
 }

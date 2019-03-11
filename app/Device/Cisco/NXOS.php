@@ -10,8 +10,29 @@ class NXOS extends \App\Device\Cisco\Cisco
 
     public function discover()
     {
-        $this->save();
         print __CLASS__ . "\n";
-
+        $this->save();
+        $this->scan();
+        return $this;
     }
+
+    public function getSerial()
+    {
+        $reg = "/SN:\s+(\S+)/";
+        if (preg_match($reg, $this->data['inventory'], $hits))
+        {
+            return $hits[1];
+        }
+    }
+
+    public function getModel()
+    {
+        $reg = "/PID:\s+(\S+)/";
+        if (preg_match($reg, $this->data['inventory'], $hits))
+        {
+            return $hits[1];
+        }
+    }
+
+
 }

@@ -10,8 +10,9 @@ class IOSXE extends \App\Device\Cisco\Cisco
 
     public function discover()
     {
-        $this->save();
         print __CLASS__ . "\n";
-
+        $this->save();
+        $this->scan();
+        return $this;
     }
 }

@@ -5,6 +5,7 @@ namespace App\Device;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Metaclassing\SSH;
+use phpseclib\Net\SSH2;
 use Nanigans\SingleTableInheritance\SingleTableInheritanceTrait;
 
 class Device extends Model
@@ -38,6 +39,50 @@ class Device extends Model
     public $username = "";
     public $password = "";
 
+    public function generateDeviceInfo()
+    {
+        if($this->username == "")
+        {
+            $username = env('DEFAULT_USERNAME');
+        } else {
+            $username = $this->username;
+        }
+        if($this->password == "")
+        {
+            $password = env('DEFAULT_PASSWORD');
+        } else {
+            $password = $this->password;
+        }
+
+        $deviceinfo = [
+            'host'      =>  $this->ip,
+            'username'  =>  $username,
+            'password'  =>  $password,
+        ];
+        return $deviceinfo;
+    }
+
+    public function getCli()
+    {
+        $deviceinfo = $this->generateDeviceInfo();
+        // Create a ssh object with our device information
+        try{
+            $cli = new SSH($deviceinfo);
+            $cli->connect();
+        } catch (\Exception $e) {
+            $cli = new SSH2($deviceinfo['host']);
+            if (!$cli->login($deviceinfo['username'], $deviceinfo['password']))
+            {
+                exit('Login Failed');
+            }
+        }
+
+        // send the term len 0 command to stop paging output with ---more---
+        $cli->exec('terminal length 0');
+        $cli->exec('no paging');
+        return $cli;
+    }
+
     public function discover()
     {
         foreach(self::$singleTableSubclasses as $class)
@@ -45,14 +90,14 @@ class Device extends Model
             $match[$class] = 0;
             $tmp = explode('\\', $class);
             $regex[$class] = "/" . end($tmp) . "/i";
-        } 
+        }
 
         $cli = $this->getCli();
         
         $commands = [
             'sh ver',
             'show inventory',
-            'cat /etc/config/support_report',
+            'cat /etc/version',
         ];
 
         foreach($commands as $command)
@@ -71,12 +116,9 @@ class Device extends Model
         $tmp = array_keys($match);
         $newtype = reset($tmp);
 
+        $cli->disconnect();
+
         return $this->convertType($newtype)->discover();
-    }
-
-    public function deleteMe()
-    {
-
     }
 
     public function scan()
@@ -84,42 +126,19 @@ class Device extends Model
 
     }
 
-    public function getCli($ip = null, $username = null, $password = null)
+    public function getName()
     {
-        if(!$ip)
-        {
-            $ip = $this->ip;
-        }
-        if(!$username)
-        {
-            if($this->username == "")
-            {
-                $username = env('DEFAULT_USERNAME');
-            } else {
-                $username = $this->username;
-            }
-        }
-        if(!$password)
-        {
-            if($this->password == "")
-            {
-                $password = env('DEFAULT_PASSWORD');
-            } else {
-                $password = $this->password;
-            }
-        }
-        $deviceinfo = [
-            'host'      =>  $ip,
-            'username'  =>  $username,
-            'password'  =>  $password,
-        ];
-        // Create a ssh object with our device information
-        $cli = new SSH($deviceinfo);
-        $cli->connect();
-        // send the term len 0 command to stop paging output with ---more---
-        $cli->exec('terminal length 0');
-        $cli->exec('no paging');
-        return $cli;
+
+    }
+
+    public function getSerial()
+    {
+
+    }
+
+    public function getModel()
+    {
+
     }
 
     public function convertType($newtype)
