@@ -11,44 +11,51 @@ class Opengear extends \App\Device\Device
 
     protected static $singleTableType = __CLASS__;
 
+    //List of commands to run during a scan of this device.
+    public $cmds = [
+        ''                  =>  '/etc/scripts/support_report.sh',
+        'run'               =>  'config -g config',
+        'version'           =>  'cat /etc/version',
+        'support_report'    =>  'cat /etc/config/support_report',
+        'serial'            =>  'showserial',
+    ];
+
+    /*
+    This method is used to establish a CLI session with a device.
+    It will attempt to use phpseclib\Net\SSH2 library to connect.
+    Returns a phpseclib\Net\SSH2 object.
+    */
     public function getCli()
     {
         $deviceinfo = $this->generateDeviceInfo();
+        print_r($deviceinfo);
         // Create a ssh object with our device information
-        $ssh = new SSH2($deviceinfo['host']);
-        if (!$ssh->login($deviceinfo['username'], $deviceinfo['password'])) {
+        $cli = new SSH2($deviceinfo['host']);
+        if (!$cli->login($deviceinfo['username'], $deviceinfo['password'])) {
             print "LOGIN FAILED!\n";
+            return null;
         }
 
-        return $ssh;
+        return $cli;
     }
 
+    /*
+    This method is used to determine the TYPE of Opengear device this is and recategorize it.
+    This is the end of the discovery line for this type of device.
+    Instead of running another discovery, this will perform a scan() and return the object.
+    Returns App\Device\Opengear\Opengear object;
+    */ 
     public function discover()
     {
-        $this->save();
-        $this->scan();
         print __CLASS__ . "\n";
+        $this->scan();
         return $this;
     }
 
-    public function scan()
-    {
-        $cli = $this->getCli();
-        $data = $this->data;
-
-        $cli->exec("/etc/scripts/support_report.sh");
-        $data['support_report'] = $cli->exec("cat /etc/config/support_report");
-        $data['run'] = $cli->exec("config -g config");
-        $data['version'] = $cli->exec("cat /etc/version");
-        $data['serial'] = $cli->exec("showserial");
-
-        $this->data = $data;
-        $this->name = $this->getName();
-        $this->serial = $this->getSerial();
-        $this->model = $this->getModel();
-        $this->save();
-    }
-
+    /*
+    Find the name of this device from DATA.
+    Returns string (device name).
+    */
     public function getName()
     {
         $reg = "/config.system.name (\S+)/";
@@ -58,11 +65,19 @@ class Opengear extends \App\Device\Device
         }
     }
 
+    /*
+    Find the serial of this device from DATA.
+    Returns string (device serial).
+    */
     public function getSerial()
     {
         return $this->data['serial'];
     }
 
+    /*
+    Find the model of this device from DATA.
+    Returns string (device model).
+    */
     public function getModel()
     {
         $reg = "/<model>(\S+)<\/model>/";

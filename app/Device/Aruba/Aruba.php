@@ -6,9 +6,23 @@ use Metaclassing\SSH;
 
 class Aruba extends \App\Device\Device
 {
-    //protected static $singleTableSubclasses = [];
     protected static $singleTableType = __CLASS__;
 
+    //List of commands to run during a scan of this device.
+    public $cmds = [
+        'run'           =>  'sh run',
+        'version'       =>  'sh version',
+        'inventory'     =>  'sh inventory',
+        'dir'           =>  'dir',
+        'cdp'           =>  'sh cdp neighbor',
+        'lldp'          =>  'sh lldp neighbor',
+    ];
+
+    /*
+    This method is used to establish a CLI session with a device.
+    It will attempt to use Metaclassing\SSH library to work with specific models of devices that do not support ssh2.0 natively.
+    Returns a Metaclassing\SSH object.
+    */
     public function getCli()
     {
         $deviceinfo = $this->generateDeviceInfo();
@@ -25,34 +39,23 @@ class Aruba extends \App\Device\Device
         return $cli;
     }
 
+    /*
+    This method is used to determine the TYPE of Aruba device this is and recategorize it.
+    This is the end of the discovery line for this type of device.
+    Instead of running another discovery, this will perform a scan() and return the object.
+    Returns App\Device\Aruba\Aruba object;
+    */ 
     public function discover()
     {
         print __CLASS__ . "\n";
-        $this->save();
         $this->scan();
         return $this;
     }
 
-    public function scan()
-    {
-        $cli = $this->getCli();
-        $data = $this->data;
-
-        $data['run'] = $cli->exec("sh run");
-        $data['version'] = $cli->exec("sh version");
-        $data['inventory'] = $cli->exec("sh inventory");
-        $data['dir'] = $cli->exec("dir");
-        $data['lldp'] = $cli->exec("sh lldp neighbor");
-
-        $this->data = $data;
-        $this->name = $this->getName();
-        $this->serial = $this->getSerial();
-        $this->model = $this->getModel();
-
-        $this->save();
-        return $this;
-    }
-
+    /*
+    Find the name of this device from DATA.
+    Returns string (device name).
+    */
     public function getName()
     {
         $reg = "/hostname\s+\"(\S+)\"/";
@@ -62,6 +65,10 @@ class Aruba extends \App\Device\Device
         }
     }
 
+    /*
+    Find the serial of this device from DATA.
+    Returns string (device serial).
+    */
     public function getSerial()
     {
         $reg = "/System\s+Serial#\s+:\s+(\S+)/";
@@ -71,6 +78,10 @@ class Aruba extends \App\Device\Device
         }
     }
 
+    /*
+    Find the model of this device from DATA.
+    Returns string (device model).
+    */
     public function getModel()
     {
         $reg = "/SC\sModel#\s+:\s+(\S+)/";
