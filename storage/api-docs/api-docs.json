@@ -1,0 +1,93 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "title": "test oauth API",
+        "version": "0.3"
+    },
+    "paths": {
+        "/api/hello": {
+            "get": {
+                "summary": "Hello world test for API troubleshooting",
+                "responses": {
+                    "200": {
+                        "description": "Hello world example"
+                    }
+                }
+            }
+        },
+        "/api/me": {
+            "get": {
+                "tags": [
+                    "Me"
+                ],
+                "summary": "Get user information about the token authenticated user",
+                "responses": {
+                    "200": {
+                        "description": "User information"
+                    },
+                    "401": {
+                        "description": "Authentication failed"
+                    }
+                },
+                "security": [
+                    {
+                        "AzureAD": []
+                    }
+                ]
+            }
+        },
+        "/api/me/roles": {
+            "get": {
+                "tags": [
+                    "Me"
+                ],
+                "summary": "Get user roles for the token authenticated user",
+                "responses": {
+                    "200": {
+                        "description": "User information"
+                    },
+                    "401": {
+                        "description": "Authentication failed"
+                    }
+                },
+                "security": [
+                    {
+                        "AzureAD": []
+                    }
+                ]
+            }
+        },
+        "/api/me/roles/permissions": {
+            "get": {
+                "tags": [
+                    "Me"
+                ],
+                "summary": "Get user role permissions for the token authenticated user",
+                "responses": {
+                    "200": {
+                        "description": "User information"
+                    },
+                    "401": {
+                        "description": "Authentication failed"
+                    }
+                },
+                "security": [
+                    {
+                        "AzureAD": []
+                    }
+                ]
+            }
+        }
+    },
+    "definitions": {},
+    "securityDefinitions": {
+        "AzureAD": {
+            "type": "oauth2",
+            "flow": "implicit",
+            "authorizationUrl": "https://login.microsoftonline.com/07420c3d-c141-4c67-b6f3-f448e5adb67b/oauth2/v2.0/authorize",
+            "scopes": {
+                "api://915c46fe-ee91-41c7-98ab-b257b04ea7ec/access_as_user": "Use client_id: 915c46fe-ee91-41c7-98ab-b257b04ea7ec"
+            }
+        }
+    }
+}
