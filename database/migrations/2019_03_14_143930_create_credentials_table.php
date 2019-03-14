@@ -15,7 +15,6 @@ class CreateCredentialsTable extends Migration
     {
         Schema::create('credentials', function (Blueprint $table) {
             $table->increments('id');
-            $table->timestamps();
             $table->string('name');
             $table->string('type');            
             $table->string('class')->nullable();
@@ -23,6 +22,7 @@ class CreateCredentialsTable extends Migration
             $table->string('passkey');
             $table->string('description')->nullable();
             $table->json('options')->nullable();
+            $table->timestamps();
             $table->softDeletes();
         });
     }
