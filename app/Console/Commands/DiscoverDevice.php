@@ -2,6 +2,7 @@
 
 namespace App\Console\Commands;
 
+use \App\Device\Device; 
 use Illuminate\Console\Command;
 
 class DiscoverDevice extends Command
@@ -18,7 +19,7 @@ class DiscoverDevice extends Command
      *
      * @var string
      */
-    protected $description = 'Device Discover device by ip address. Username and password can be passed in optoinal';
+    protected $description = 'Device Discover device by ip address. Username and password can be passed in optional';
 
     /**
      * Create a new command instance.
@@ -37,13 +38,16 @@ class DiscoverDevice extends Command
      */
     public function handle()
     {
-        $device = new \App\Device\Device;
+		$arguments = $this->arguments();
+
+		if($this->check_if_ip_exists_in_db($arguments['ipaddress'])){
+			echo "Device already exists in DB.\n"; 
+			die();
+		}
 		
-		$device->ip = $this->argument('ipaddress');
+		$device = new Device; 
 		
-		$arguments = $this->arguments(); 
-		//print_r($arguments); 
-		
+		$device->ip = $arguments['ipaddress']; 
 		if(isset($arguments['username'])){
 			$device->username = $this->argument('username');
 		}
@@ -53,8 +57,12 @@ class DiscoverDevice extends Command
 		
 		$result = $device->discover();
 		
-		print_r($result); 
-		//$device = \App\Device\Device::where("ip", $device->ip)->first(); 
-		//print_r($device); 
+		//print_r(json_decode(json_encode($result), true));
+		
     }
+	
+	public function check_if_ip_exists_in_db($ipaddress)
+    {
+		return $devices = Device::where('ip', $ipaddress)->count(); 
+	}
 }
