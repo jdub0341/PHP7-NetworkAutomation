@@ -8,6 +8,7 @@ use Metaclassing\SSH;
 use phpseclib\Net\SSH2;
 use Nanigans\SingleTableInheritance\SingleTableInheritanceTrait;
 use DB;
+use App\Credential\Credential;
 
 class Device extends Model
 {
@@ -70,6 +71,22 @@ class Device extends Model
             'password'  =>  $password,
         ];
         return $deviceinfo;
+    }
+
+    public function getCredentials()
+    {
+        if($this->data['username'] && $this->data['password'])
+        {
+            $customcred = new Credential;
+            $customcred->username = $this->data['username'];
+            $customcred->password = $this->data['password'];
+            $customcred->type = __CLASS__;
+            print_r($customcred);
+            $credentials = collect([$customcred]);
+        } else {
+            $credentials = Credential::all();
+        }
+        return $credentials;
     }
 
     /*
