@@ -13,6 +13,24 @@ use Illuminate\Http\Request;
 |
 */
 
+/**
+ * @SWG\Info(title="test oauth API", version="0.3")
+ **/
+
+/**
+ * @SWG\Get(
+ *     path="/api/hello",
+ *     summary="Hello world test for API troubleshooting",
+ *     @SWG\Response(response="200", description="Hello world example")
+ * )
+ **/
+Route::middleware('api')->get('/hello', function (Request $request) {
+    return 'hello world';
+});
+
+// This was the default file contents of this file, it has been disabled by PHP7-Laravel5-EnterpriseAuth
+/*
 Route::middleware('auth:api')->get('/user', function (Request $request) {
     return $request->user();
 });
+*/
