@@ -27,16 +27,28 @@ class Opengear extends \App\Device\Device
     */
     public function getCli()
     {
-        $deviceinfo = $this->generateDeviceInfo();
-        print_r($deviceinfo);
-        // Create a ssh object with our device information
-        $cli = new SSH2($deviceinfo['host']);
-        if (!$cli->login($deviceinfo['username'], $deviceinfo['password'])) {
-            print "LOGIN FAILED!\n";
-            return null;
+        $credentials = $this->getCredentials();
+        foreach($credentials as $credential)
+        {
+            $deviceinfo = [
+                "host"      =>  $this->ip,
+                "username"  =>  $credential->username,
+                "password"  =>  $credential->passkey,
+            ];
+            // Attempt to connect using Metaclassing\SSH library.
+            try
+            {
+                $cli = new SSH2($deviceinfo['host']);
+                if ($cli->login($deviceinfo['username'], $deviceinfo['password']))
+                {
+                    $this->credential_id = $credential->id;
+                    $this->save();
+                    return $cli;
+                }
+            } catch (\Exception $e) {
+                
+            }
         }
-
-        return $cli;
     }
 
     /*

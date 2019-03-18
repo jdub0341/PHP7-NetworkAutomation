@@ -6,13 +6,15 @@
     "type": "project",
     "require": {
         "php": ">=7.0.0",
+        "darkaonline/l5-swagger": "5.5.*",
         "fideloper/proxy": "~3.3",
         "laravel/framework": "5.5.*",
         "laravel/tinker": "~1.0",
         "metaclassing/php7-laravel5-enterpriseauth": "dev-master",
         "metaclassing/php7-sshwrapper": "dev-master",
         "nanigans/single-table-inheritance": "0.8.*",
-        "phpseclib/phpseclib": "~2.0"
+        "phpseclib/phpseclib": "~2.0",
+        "zircote/swagger-php": "2.*"
     },
     "require-dev": {
         "filp/whoops": "~2.0",
