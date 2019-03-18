@@ -38,55 +38,31 @@ class Device extends Model
         'data' => 'array'
     ];
 
-    public $username = "";
-    public $password = "";
+    public function credential()
+    {
+        return $this->hasOne('App\Credential\Credential','id','credential_id');
+    }
 
     public $cmds = [];
 
     /*
-    This method is used to generate an array that is used by the getCli function to establish SSH session to a device.
-    Returns an ARRAY[]
+    This method is used to generate a COLLECTION of credentials to use to connect to this device.
+    Returns a COLLECTION
     */
-    public function generateDeviceInfo()
-    {
-        //If the username property is blank, let's use the default!
-        if($this->username == "")
-        {
-            print "no username found!" . "\n";
-            $username = env('DEFAULT_USERNAME');
-        } else {
-            $username = $this->username;
-        }
-        //If the password property is blank, let's use the default!
-        if($this->password == "")
-        {
-            print "no password found!" . "\n";
-            $password = env('DEFAULT_PASSWORD');
-        } else {
-            $password = $this->password;
-        }
-        $deviceinfo = [
-            'host'      =>  $this->ip,
-            'username'  =>  $username,
-            'password'  =>  $password,
-        ];
-        return $deviceinfo;
-    }
-
     public function getCredentials()
     {
-        if($this->data['username'] && $this->data['password'])
+        if($this->credential)
         {
-            $customcred = new Credential;
-            $customcred->username = $this->data['username'];
-            $customcred->password = $this->data['password'];
-            $customcred->type = __CLASS__;
-            print_r($customcred);
-            $credentials = collect([$customcred]);
+            //If the device already has a credential assigned for use, return it in a collection.
+            return collect([$this->credential]);
         } else {
-            $credentials = Credential::all();
+            //Find all credentials matching the CLASS of the device first.
+            $classcreds = Credential::where("class",get_class($this))->get();
+            //Find all credentials that are global (not class specific).
+            $allcreds = Credential::whereNull("class")->get();
         }
-        return $credentials;
+        //Return a collection of credentials to attempt.
+        return $classcreds->merge($allcreds);
     }
 
     /*
@@ -97,24 +73,48 @@ class Device extends Model
     */
     public function getCli()
     {
-        $deviceinfo = $this->generateDeviceInfo();
-        // Attempt to connect using Metaclassing\SSH library.
-        try{
-            $cli = new SSH($deviceinfo);
-            $cli->connect();
-        } catch (\Exception $e) {
-            //If that fails, attempt to connect using phpseclib\Net\SSH2 library.
-            $cli = new SSH2($deviceinfo['host']);
-            if (!$cli->login($deviceinfo['username'], $deviceinfo['password']))
+        //Get our collection or credentials to attempt and foreach them.
+        $credentials = $this->getCredentials();
+        foreach($credentials as $credential)
+        {
+            $deviceinfo = [
+                "host"      =>  $this->ip,
+                "username"  =>  $credential->username,
+                "password"  =>  $credential->passkey,
+            ];
+            // Attempt to connect using Metaclassing\SSH library.
+            try
             {
-                exit('Login Failed');
+                $cli = new SSH($deviceinfo);
+                $cli->connect();
+                if($cli->connected)
+                {
+                    // send the term len 0 command to stop paging output with ---more---
+                    $cli->exec('terminal length 0');  //Cisco
+                    $cli->exec('no paging');  //Aruba
+                    //Assign this credential to the device for faster future use.
+                    $this->credential_id = $credential->id;
+                    $this->save();
+                    return $cli;
+                }
+            } catch (\Exception $e) {
+                //future
+            }
+            try
+            {
+                //The attempt above using Metaclassing\SSH must have failed.   Try using phpseclib\Net\SSH2 with same creds.
+                $cli = new SSH2($deviceinfo['host']);
+                if ($cli->login($deviceinfo['username'], $deviceinfo['password']))
+                {
+                    //Assign this credential to the device for faster future use.
+                    $this->credential_id = $credential->id;
+                    $this->save();
+                    return $cli;
+                }
+            } catch (\Exception $e) {
+                //future
             }
         }
-
-        // send the term len 0 command to stop paging output with ---more---
-        $cli->exec('terminal length 0');  //Cisco
-        $cli->exec('no paging');  //Aruba
-        return $cli;
     }
 
     /*
