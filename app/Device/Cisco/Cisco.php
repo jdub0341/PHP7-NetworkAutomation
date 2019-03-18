@@ -33,18 +33,31 @@ class Cisco extends \App\Device\Device
     */
     public function getCli()
     {
-        $deviceinfo = $this->generateDeviceInfo();
-        // Create a ssh object with our device information
-        try{
-            $cli = new SSH($deviceinfo);
-            $cli->connect();
-        } catch (\Exception $e) {
-            return null;
+        $credentials = $this->getCredentials();
+        foreach($credentials as $credential)
+        {
+            $deviceinfo = [
+                "host"      =>  $this->ip,
+                "username"  =>  $credential->username,
+                "password"  =>  $credential->passkey,
+            ];
+            // Attempt to connect using Metaclassing\SSH library.
+            try
+            {
+                $cli = new SSH($deviceinfo);
+                $cli->connect();
+                if($cli->connected)
+                {
+                    // send the term len 0 command to stop paging output with ---more---
+                    $cli->exec('terminal length 0');  //Cisco
+                    $this->credential_id = $credential->id;
+                    $this->save();
+                    return $cli;
+                }
+            } catch (\Exception $e) {
+                //If that fails, attempt to connect using phpseclib\Net\SSH2 library.
+            }
         }
-
-        // send the term len 0 command to stop paging output with ---more---
-        $cli->exec('terminal length 0');
-        return $cli;
     }
 
     /*
