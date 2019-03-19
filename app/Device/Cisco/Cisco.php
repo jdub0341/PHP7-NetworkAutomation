@@ -36,26 +36,18 @@ class Cisco extends \App\Device\Device
         $credentials = $this->getCredentials();
         foreach($credentials as $credential)
         {
-            $deviceinfo = [
-                "host"      =>  $this->ip,
-                "username"  =>  $credential->username,
-                "password"  =>  $credential->passkey,
-            ];
             // Attempt to connect using Metaclassing\SSH library.
             try
             {
-                $cli = new SSH($deviceinfo);
-                $cli->connect();
-                if($cli->connected)
-                {
-                    // send the term len 0 command to stop paging output with ---more---
-                    $cli->exec('terminal length 0');  //Cisco
-                    $this->credential_id = $credential->id;
-                    $this->save();
-                    return $cli;
-                }
+                $cli = $this->getSSH1($this->ip, $credential->username, $credential->passkey);
             } catch (\Exception $e) {
                 //If that fails, attempt to connect using phpseclib\Net\SSH2 library.
+            }
+            if($cli)
+            {
+                $this->credential_id = $credential->id;
+                $this->save();
+                return $cli;
             }
         }
     }
@@ -135,7 +127,7 @@ class Cisco extends \App\Device\Device
         //Modify the record in the DB to change the type.
         DB::table('devices')
         ->where('id', $this->id)
-        ->update(array('type' => $newtype));
+        ->update(['type' => $newtype]);
         //Get a fresh copy of this model from the DB (which gives us a new class type) and immediately run discover().
         $this->fresh()->discover();
     }

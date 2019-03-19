@@ -73,47 +73,64 @@ class Device extends Model
     */
     public function getCli()
     {
-        //Get our collection or credentials to attempt and foreach them.
+        $cli = null;
+        //Get our collection of credentials to attempt and foreach them.
         $credentials = $this->getCredentials();
         foreach($credentials as $credential)
         {
-            $deviceinfo = [
-                "host"      =>  $this->ip,
-                "username"  =>  $credential->username,
-                "password"  =>  $credential->passkey,
-            ];
             // Attempt to connect using Metaclassing\SSH library.
             try
             {
-                $cli = new SSH($deviceinfo);
-                $cli->connect();
-                if($cli->connected)
-                {
-                    // send the term len 0 command to stop paging output with ---more---
-                    $cli->exec('terminal length 0');  //Cisco
-                    $cli->exec('no paging');  //Aruba
-                    //Assign this credential to the device for faster future use.
-                    $this->credential_id = $credential->id;
-                    $this->save();
-                    return $cli;
-                }
+                $cli = $this->getSSH1($this->ip,$credential->username,$credential->passkey);
             } catch (\Exception $e) {
-                //future
+                print $e->getMessage() . "\n";
             }
-            try
+
+            if(!$cli)
             {
-                //The attempt above using Metaclassing\SSH must have failed.   Try using phpseclib\Net\SSH2 with same creds.
-                $cli = new SSH2($deviceinfo['host']);
-                if ($cli->login($deviceinfo['username'], $deviceinfo['password']))
+                //Attemp to connect using phpseclib\Net\SSH2 library.
+                try
                 {
-                    //Assign this credential to the device for faster future use.
-                    $this->credential_id = $credential->id;
-                    $this->save();
-                    return $cli;
+                    $cli = $this->getSSH2($this->ip,$credential->username,$credential->passkey);
+                } catch (\Exception $e) {
+                    print $e->getMessage() . "\n";
                 }
-            } catch (\Exception $e) {
-                //future
             }
+
+            if($cli)
+            {
+                $this->credential_id = $credential->id;
+                $this->save();
+                return $cli;
+            }
+        }
+    }
+
+    public static function getSSH1($ip, $username, $password)
+    {
+        $deviceinfo = [
+            "host"      =>  $ip,
+            "username"  =>  $username,
+            "password"  =>  $password,
+        ];
+        $cli = new SSH($deviceinfo);
+        $cli->connect();
+        if($cli->connected)
+        {
+            // send the term len 0 command to stop paging output with ---more---
+            $cli->exec('terminal length 0');  //Cisco
+            $cli->exec('no paging');  //Aruba
+            return $cli;
+        }
+    }
+
+    public static function getSSH2($ip, $username, $password)
+    {
+        //Try using phpseclib\Net\SSH2 to connect to device.
+        $cli = new SSH2($ip);
+        if ($cli->login($username, $password))
+        {
+            return $cli;
         }
     }
 
@@ -173,7 +190,7 @@ class Device extends Model
         //Modify the record in the DB to change the type.
         DB::table('devices')
             ->where('id', $this->id)
-            ->update(array('type' => $newtype));
+            ->update(['type' => $newtype]);
         //Get a fresh copy of this model from the DB (which gives us a new class type) and immediately run discover().
         $this->fresh()->discover();
     }
@@ -219,14 +236,15 @@ class Device extends Model
 
     }
 
-/*     public function convertType($newtype)
+/*     public function save($options = [])
     {
-        return unserialize(sprintf(
-            'O:%d:"%s"%s',
-            strlen($newtype),
-            $newtype,
-            strstr(strstr(serialize($this), '"'), ':')
-        ));
+        $devices = Device::where("ip",$this->ip)->get();
+        if($devices->count() == 0)
+        {
+            return parent::save($options);
+        } else {
+            throw new \Exception("Device with IP " . $this->ip . " already exists.");
+        }
     } */
     
 }

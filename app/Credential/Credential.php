@@ -9,4 +9,13 @@ class Credential extends Model
 {
     use SoftDeletes;
 
+    protected $fillable = [
+        'name',
+        'type',
+        'class', 
+        'username',
+        'passkey',
+        'description',
+        'options',
+      ];
 }
