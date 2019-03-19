@@ -30,23 +30,18 @@ class Opengear extends \App\Device\Device
         $credentials = $this->getCredentials();
         foreach($credentials as $credential)
         {
-            $deviceinfo = [
-                "host"      =>  $this->ip,
-                "username"  =>  $credential->username,
-                "password"  =>  $credential->passkey,
-            ];
             // Attempt to connect using Metaclassing\SSH library.
             try
             {
-                $cli = new SSH2($deviceinfo['host']);
-                if ($cli->login($deviceinfo['username'], $deviceinfo['password']))
-                {
-                    $this->credential_id = $credential->id;
-                    $this->save();
-                    return $cli;
-                }
+                $cli = $this->getSSH2($this->ip, $credential->username, $credential->passkey);
             } catch (\Exception $e) {
-                
+                //If that fails, attempt to connect using phpseclib\Net\SSH2 library.
+            }
+            if($cli)
+            {
+                $this->credential_id = $credential->id;
+                $this->save();
+                return $cli;
             }
         }
     }
