@@ -2,6 +2,8 @@
 
 namespace App\Console\Commands;
 
+use \App\Jobs; 
+use \App\Jobs\ScanDeviceJob; 
 use \App\Device\Device; 
 use Illuminate\Console\Command;
 
@@ -12,7 +14,7 @@ class ScanDevice extends Command
      *
      * @var string
      */
-    protected $signature = 'netman:scanDevice {id} {--username=} {--password=}';
+    protected $signature = 'netman:scanDevice {id?} {--username=} {--password=}';
 
     /**
      * The console command description.
@@ -40,7 +42,31 @@ class ScanDevice extends Command
     {
         $arguments = $this->arguments();
 
-		print_r($arguments); 
+		
+		if($arguments['id']){
+			$this->scanDeviceManually($arguments); 
+			//$this->scanDeviceJob($arguments);
+		}
+		else{
+			$this->scanDeviceJobs(); 
+		}
+		
+    
+	}
+	
+	public function scanDeviceJobs()
+	{
+		// Run Scan all devices in the Database. 
+		$devices = Device::all();
+		
+		foreach($devices as $device){
+			$result = ScanDeviceJob::dispatch($device['id'])->onQueue('default');		// Create a scan job for each device in the database
+		}
+	}
+	
+	public function scanDeviceJob($arguments)
+	{
+		// Create a scan job for the device you enter arguments for. 
 		if(!$this->check_if_id_exists_in_db($arguments['id'])){
 			echo "Device ID does not exist in DB.\n"; 
 			die();
@@ -55,10 +81,31 @@ class ScanDevice extends Command
 			$device->password = $this->argument('password');
 		}
 		
-		$result = $device->discover();
+		$result = ScanDeviceJob::dispatch($device['id']); 
+		//$result = ScanDeviceJob::dispatch($device); 
 
-		// print_r(json_decode(json_encode($result), true)); 
-    
+	}
+	
+	public function scanDeviceManually($arguments)
+	{
+		print_r($arguments); 
+		if(!$this->check_if_id_exists_in_db($arguments['id'])){
+			echo "Device ID does not exist in DB.\n"; 
+			die();
+		}
+		
+		$device = Device::find($arguments['id']);
+
+		if(isset($arguments['username'])){
+			$device->username = $this->argument('username');
+		}
+		if(isset($arguments['password'])){
+			$device->password = $this->argument('password');
+		}
+
+		$result = $device->scan();
+
+		print_r(json_decode(json_encode($result), true)); 
 	}
 	
 	public function check_if_id_exists_in_db($id)

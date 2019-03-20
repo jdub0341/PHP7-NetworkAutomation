@@ -14,6 +14,7 @@
         "metaclassing/php7-sshwrapper": "dev-master",
         "nanigans/single-table-inheritance": "0.8.*",
         "phpseclib/phpseclib": "~2.0",
+        "predis/predis": "^1.1",
         "zircote/swagger-php": "2.*"
     },
     "require-dev": {

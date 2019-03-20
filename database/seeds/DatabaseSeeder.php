@@ -12,5 +12,6 @@ class DatabaseSeeder extends Seeder
     public function run()
     {
         // $this->call(UsersTableSeeder::class);
+		$this->call(DefaultCredsSeeder::class); // Seed the default creds into the credentials table. 
     }
 }
