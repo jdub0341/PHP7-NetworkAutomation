@@ -44,8 +44,8 @@ class ScanDevice extends Command
 
 		
 		if($arguments['id']){
-			$this->scanDeviceManually($arguments); 
-			//$this->scanDeviceJob($arguments);
+			//$this->scanDeviceManually($arguments); 
+			$this->scanDeviceJob($arguments);
 		}
 		else{
 			$this->scanDeviceJobs(); 
@@ -54,22 +54,25 @@ class ScanDevice extends Command
     
 	}
 	
+	// Run Scan all devices in the Database. 
 	public function scanDeviceJobs()
 	{
-		// Run Scan all devices in the Database. 
-		$devices = Device::all();
+		//$devices = Device::all();
+		
+		$devices = Device::select('id')->get();
 		
 		foreach($devices as $device){
+			\Log::info('ScanDeviceCommand', ['ScanDeviceJob' => 'create', 'device_id' => $device['id']]);   // Log device to the log file. 
 			$result = ScanDeviceJob::dispatch($device['id'])->onQueue('default');		// Create a scan job for each device in the database
 		}
 	}
 	
+	// Call this function manually by uncommenting in handle. This will queue the work. 
 	public function scanDeviceJob($arguments)
 	{
 		// Create a scan job for the device you enter arguments for. 
 		if(!$this->check_if_id_exists_in_db($arguments['id'])){
-			echo "Device ID does not exist in DB.\n"; 
-			die();
+			throw new \Exception("Device ID does not exist in DB.\n");
 		}
 		
 		$device = Device::find($arguments['id']);
@@ -82,16 +85,15 @@ class ScanDevice extends Command
 		}
 		
 		$result = ScanDeviceJob::dispatch($device['id']); 
-		//$result = ScanDeviceJob::dispatch($device); 
-
+		
 	}
 	
+	// Call this function manually by uncommenting in handle. This will not queue the work. 
 	public function scanDeviceManually($arguments)
 	{
 		print_r($arguments); 
 		if(!$this->check_if_id_exists_in_db($arguments['id'])){
-			echo "Device ID does not exist in DB.\n"; 
-			die();
+			throw new \Exception("Device ID does not exist in DB.\n");
 		}
 		
 		$device = Device::find($arguments['id']);

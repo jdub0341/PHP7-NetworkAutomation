@@ -9,6 +9,7 @@
         "darkaonline/l5-swagger": "5.5.*",
         "fideloper/proxy": "~3.3",
         "laravel/framework": "5.5.*",
+        "laravel/horizon": "2.*",
         "laravel/tinker": "~1.0",
         "metaclassing/php7-laravel5-enterpriseauth": "dev-master",
         "metaclassing/php7-sshwrapper": "dev-master",

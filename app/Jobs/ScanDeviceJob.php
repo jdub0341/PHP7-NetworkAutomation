@@ -2,7 +2,7 @@
 
 namespace App\Jobs;
 
-use App\Device; 
+use \App\Device\Device; 
 use Illuminate\Support\Facades\DB;
 use Illuminate\Bus\Queueable;
 use Illuminate\Queue\SerializesModels;
@@ -15,6 +15,7 @@ class ScanDeviceJob implements ShouldQueue
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
 	public $device; 
+	public $id; 
 
     /**
      * Create a new job instance.
@@ -23,6 +24,7 @@ class ScanDeviceJob implements ShouldQueue
      */
     public function __construct($id)
     {
+		$this->id = $id; 
 		$this->device = DB::table('devices')->where('id', $id)->first();		// Get the device from db to get the device type. 
 		$this->device = $this->device->type::find($this->device->id);			// Get the correct model and refech the device. 
     }
@@ -35,7 +37,8 @@ class ScanDeviceJob implements ShouldQueue
      */
     public function handle()
     {
-		$device = $this->device->scan();  						// Scan the device and resave to the DB. 
-		\Log::info('ScanDeviceJob', ['data' => $device]);		// Log device to the log file. 
+		\Log::info('ScanDeviceJob', ['ScanDeviceJob' => 'starting', 'device_id' => $this->id]);   // Log device to the log file. 
+		$this->device->scan();  						// Scan the device and resave to the DB. 
+		\Log::info('ScanDeviceJob', ['ScanDeviceJob' => 'complete', 'device_id' => $this->id]);   // Log device to the log file. 
     }
 }
