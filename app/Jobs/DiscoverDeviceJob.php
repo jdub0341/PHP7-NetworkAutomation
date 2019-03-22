@@ -15,7 +15,7 @@ class DiscoverDeviceJob implements ShouldQueue
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
 	public $device; 
-	public $arguments; 
+	public $ip; 
 	
     /**
      * Create a new job instance.
@@ -24,7 +24,7 @@ class DiscoverDeviceJob implements ShouldQueue
      */
     public function __construct($arguments)
     {
-		$this->arguments = $arguments; 
+		$this->ip = $arguments['ipaddress'];
 		
 		$this->device = new Device; 
 		
@@ -36,7 +36,7 @@ class DiscoverDeviceJob implements ShouldQueue
 		if(isset($arguments['password'])){
 			$this->device->password = $this->argument('password');
 		}
-
+		
 		$this->device->save();		// Had to save this for some reason to all the handle. Kept saying 1 argument needed, 0 provided. 
     }
 
@@ -47,9 +47,9 @@ class DiscoverDeviceJob implements ShouldQueue
      */
     public function handle()
     {	
-		\Log::info('DiscoverDeviceJob', ['DiscoverDeviceJob' => 'starting', 'device_ip' => $this->$arguments->ip]);   // Log device to the log file. 
+		\Log::info('DiscoverDeviceJob', ['DiscoverDeviceJob' => 'starting', 'device_ip' => $this->ip]);   // Log device to the log file. 
 		$this->device->discover();
-		\Log::info('DiscoverDeviceJob', ['DiscoverDeviceJob' => 'complete', 'device_ip' => $this->$arguments->ip]);   // Log device to the log file. 
+		\Log::info('DiscoverDeviceJob', ['DiscoverDeviceJob' => 'complete', 'device_ip' => $this->ip]);   // Log device to the log file. 
     }
 
 }
