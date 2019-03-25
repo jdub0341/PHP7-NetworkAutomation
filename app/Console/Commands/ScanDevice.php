@@ -72,7 +72,7 @@ class ScanDevice extends Command
 	{
 		// Create a scan job for the device you enter arguments for. 
 		if(!$this->check_if_id_exists_in_db($arguments['id'])){
-			throw new \Exception("Device ID does not exist in DB.\n");
+			throw new \Exception("Device ID {$arguments['id']} does not exist in DB.\n");
 		}
 		
 		$device = Device::find($arguments['id']);
@@ -84,7 +84,7 @@ class ScanDevice extends Command
 			$device->password = $this->argument('password');
 		}
 		
-		$result = ScanDeviceJob::dispatch($device['id']); 
+		$result = ScanDeviceJob::dispatch($device->id); 
 		
 	}
 	
@@ -93,7 +93,7 @@ class ScanDevice extends Command
 	{
 		print_r($arguments); 
 		if(!$this->check_if_id_exists_in_db($arguments['id'])){
-			throw new \Exception("Device ID does not exist in DB.\n");
+			throw new \Exception("Device ID {$arguments['id']} does not exist in DB.\n");
 		}
 		
 		$device = Device::find($arguments['id']);
