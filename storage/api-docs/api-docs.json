@@ -5,6 +5,121 @@
         "version": "0.3"
     },
     "paths": {
+        "/api/device": {
+            "get": {
+                "tags": [
+                    "Device"
+                ],
+                "summary": "Get Device",
+                "description": "",
+                "operationId": "",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "parameters": [
+                    {
+                        "name": "include",
+                        "in": "query",
+                        "description": "relationships to include (Comma seperated)",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "filter[id]",
+                        "in": "query",
+                        "description": "id of device",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "filter[ip]",
+                        "in": "query",
+                        "description": "ip of device",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "filter[type]",
+                        "in": "query",
+                        "description": "type of device",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "filter[name]",
+                        "in": "query",
+                        "description": "name of device",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "filter[model]",
+                        "in": "query",
+                        "description": "model of device",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "filter[serial]",
+                        "in": "query",
+                        "description": "serial of device",
+                        "required": false,
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "successful operation"
+                    }
+                },
+                "security": [
+                    {
+                        "AzureAD": []
+                    }
+                ]
+            }
+        },
+        "/api/device/{id}": {
+            "get": {
+                "tags": [
+                    "Device"
+                ],
+                "summary": "Get Device by ID",
+                "description": "",
+                "operationId": "",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID of Device",
+                        "required": true,
+                        "type": "integer"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "successful operation"
+                    },
+                    "401": {
+                        "description": "Unauthorized user"
+                    }
+                },
+                "security": [
+                    {
+                        "AzureAD": []
+                    }
+                ]
+            }
+        },
         "/api/hello": {
             "get": {
                 "summary": "Hello world test for API troubleshooting",
