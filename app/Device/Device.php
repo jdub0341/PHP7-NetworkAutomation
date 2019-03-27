@@ -9,11 +9,24 @@ use phpseclib\Net\SSH2;
 use Nanigans\SingleTableInheritance\SingleTableInheritanceTrait;
 use DB;
 use App\Credential\Credential;
+use Laravel\Scout\Searchable;
 
 class Device extends Model
 {
+	use Searchable;	// Add for Scout to search
     use SoftDeletes;
     use SingleTableInheritanceTrait;
+	
+	// Scout Searchable
+	public function toSearchableArray()
+    {
+        $array = $this->toArray();
+		
+		$array['data'] = json_encode($array['data'], true); 
+        // Customize array...
+
+        return $array;
+    }
 
     protected $table = "devices";
     protected static $singleTableTypeField = 'type';

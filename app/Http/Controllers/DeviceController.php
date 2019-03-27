@@ -189,4 +189,50 @@ class DeviceController extends Controller
     {
         //
     }
+	
+	
+	/**
+	* @SWG\Get(
+	*     path="/api/device/search/{search}",
+	*     tags={"Device"},
+	*     summary="Get Device by Search",
+	*     description="",
+	*     operationId="",
+	*     consumes={"application/json"},
+	*     produces={"application/json"},
+	*     @SWG\Parameter(
+	*         name="search",
+	*         in="path",
+	*         description="search",
+	*         required=true,
+	*         type="string"
+	*     ),
+	*     @SWG\Response(
+	*         response=200,
+	*         description="successful operation",
+	*     ),
+	*     @SWG\Response(
+	*         response="401",
+	*         description="Unauthorized user",
+	*     ),
+	*     security={
+	*         {"AzureAD": {}},
+	*     }
+	* )
+	**/
+	public function search(Request $request)
+    {
+		if($request->paginate)
+        {
+            $paginate = $request->paginate;
+        } else {
+            $paginate = env("DEFAULT_PAGINATION");
+        }
+		
+		$search = $request->search; 
+		
+		$devices = Device::search($search)->paginate($paginate);
+		
+		return DeviceCollection::collection($devices); 
+    }
 }

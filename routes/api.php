@@ -38,3 +38,5 @@ Route::middleware('auth:api')->get('/user', function (Request $request) {
 
 
 Route::apiResource('/device', 'DeviceController'); 
+
+Route::get('device/search/{search}', 'DeviceController@search')->name('device.search'); 
