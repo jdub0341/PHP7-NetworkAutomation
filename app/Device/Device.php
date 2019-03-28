@@ -21,11 +21,8 @@ class Device extends Model
 	public function toSearchableArray()
     {
         $array = $this->toArray();
-		
-		$array['data'] = json_encode($array['data'], true); 
-        // Customize array...
-
-        return $array;
+		$array['data'] = json_encode($array['data'], true); // Change data to json encoded for Scout tnt driver to search. Cannot do nested array search. 
+		return $array;
     }
 
     protected $table = "devices";
