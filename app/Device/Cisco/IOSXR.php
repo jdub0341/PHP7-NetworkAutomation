@@ -14,8 +14,9 @@ class IOSXR extends \App\Device\Cisco\Cisco
     */
     public function discover()
     {
-        print __CLASS__ . "\n";
+        echo __CLASS__."\n";
         $this->scan();
+
         return $this;
     }
 
@@ -27,8 +28,7 @@ class IOSXR extends \App\Device\Cisco\Cisco
     {
         //Reg to grab the serial from the show inventory.
         $reg = "/SN:\s+(\S+)/";
-        if (preg_match($reg, $this->data['inventory'], $hits))
-        {
+        if (preg_match($reg, $this->data['inventory'], $hits)) {
             return $hits[1];
         }
     }
@@ -41,8 +41,7 @@ class IOSXR extends \App\Device\Cisco\Cisco
     {
         //Reg to grab the model from the show version.
         $reg = "/(\S+)\s+Chassis/";
-        if (preg_match($reg, $this->data['version'], $hits))
-        {
+        if (preg_match($reg, $this->data['version'], $hits)) {
             return $hits[1];
         }
     }

@@ -2,13 +2,12 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Resources\Device\DeviceCollection; 
-use App\Http\Resources\Device\DeviceResource; 
 use App\Device\Device;
 use Illuminate\Http\Request;
-
-use Spatie\QueryBuilder\QueryBuilder;
 use Spatie\QueryBuilder\Filter;
+use Spatie\QueryBuilder\QueryBuilder;
+use App\Http\Resources\Device\DeviceResource;
+use App\Http\Resources\Device\DeviceCollection;
 
 class DeviceController extends Controller
 {
@@ -26,18 +25,17 @@ class DeviceController extends Controller
      */
     public function index(Request $request)
     {
-        if($request->paginate)
-        {
+        if ($request->paginate) {
             $paginate = $request->paginate;
         } else {
-            $paginate = env("DEFAULT_PAGINATION");
+            $paginate = env('DEFAULT_PAGINATION');
         }
-		$devices = QueryBuilder::for(Device::class)
-			->allowedFilters(Filter::exact('id'),Filter::exact('ip'),Filter::exact('type'),Filter::exact('name'),Filter::exact('model'),Filter::exact('serial'))
-			//->allowedIncludes('part','vendor','warranty')
-			->paginate($paginate);
-			
-		return DeviceCollection::collection($devices);
+        $devices = QueryBuilder::for(Device::class)
+            ->allowedFilters(Filter::exact('id'), Filter::exact('ip'), Filter::exact('type'), Filter::exact('name'), Filter::exact('model'), Filter::exact('serial'))
+            //->allowedIncludes('part','vendor','warranty')
+            ->paginate($paginate);
+
+        return DeviceCollection::collection($devices);
     }
 
     /**
@@ -69,7 +67,7 @@ class DeviceController extends Controller
      */
     public function show(Device $device)
     {
-        return new DeviceResource($device); 
+        return new DeviceResource($device);
     }
 
     /**

@@ -2,9 +2,9 @@
 
 namespace App\Console\Commands;
 
-use \App\Jobs; 
-use \App\Jobs\ScanDeviceJob; 
-use \App\Device\Device; 
+use App\Jobs;
+use App\Device\Device;
+use App\Jobs\ScanDeviceJob;
 use Illuminate\Console\Command;
 
 class ScanDevice extends Command
@@ -41,7 +41,6 @@ class ScanDevice extends Command
     public function handle()
     {
         $arguments = $this->arguments();
-
 		
 		if($arguments['id']){
 			//$this->scanDeviceManually($arguments); 

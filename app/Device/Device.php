@@ -2,14 +2,14 @@
 
 namespace App\Device;
 
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\SoftDeletes;
+use DB;
 use Metaclassing\SSH;
 use phpseclib\Net\SSH2;
-use Nanigans\SingleTableInheritance\SingleTableInheritanceTrait;
-use DB;
 use App\Credential\Credential;
 use Laravel\Scout\Searchable;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
+use Nanigans\SingleTableInheritance\SingleTableInheritanceTrait;
 
 class Device extends Model
 {
@@ -25,7 +25,7 @@ class Device extends Model
 		return $array;
     }
 
-    protected $table = "devices";
+    protected $table = 'devices';
     protected static $singleTableTypeField = 'type';
     protected static $singleTableSubclasses = [
         Aruba\Aruba::class,
@@ -33,11 +33,11 @@ class Device extends Model
         Opengear\Opengear::class,
     ];
     protected static $singleTableType = __CLASS__;
- 
+
     protected $fillable = [
         'type',
         'ip',
-        'name', 
+        'name',
         'data',
         'vendor',
         'model',
@@ -45,12 +45,12 @@ class Device extends Model
       ];
 
     protected $casts = [
-        'data' => 'array'
+        'data' => 'array',
     ];
 
     public function credential()
     {
-        return $this->hasOne('App\Credential\Credential','id','credential_id');
+        return $this->hasOne('App\Credential\Credential', 'id', 'credential_id');
     }
 
     public $cmds = [];
@@ -61,15 +61,14 @@ class Device extends Model
     */
     public function getCredentials()
     {
-        if($this->credential)
-        {
+        if ($this->credential) {
             //If the device already has a credential assigned for use, return it in a collection.
             return collect([$this->credential]);
         } else {
             //Find all credentials matching the CLASS of the device first.
-            $classcreds = Credential::where("class",get_class($this))->get();
+            $classcreds = Credential::where('class', get_class($this))->get();
             //Find all credentials that are global (not class specific).
-            $allcreds = Credential::whereNull("class")->get();
+            $allcreds = Credential::whereNull('class')->get();
         }
         //Return a collection of credentials to attempt.
         return $classcreds->merge($allcreds);
@@ -86,31 +85,27 @@ class Device extends Model
         $cli = null;
         //Get our collection of credentials to attempt and foreach them.
         $credentials = $this->getCredentials();
-        foreach($credentials as $credential)
-        {
+        foreach ($credentials as $credential) {
             // Attempt to connect using Metaclassing\SSH library.
-            try
-            {
-                $cli = $this->getSSH1($this->ip,$credential->username,$credential->passkey);
+            try {
+                $cli = $this->getSSH1($this->ip, $credential->username, $credential->passkey);
             } catch (\Exception $e) {
-                print $e->getMessage() . "\n";
+                echo $e->getMessage()."\n";
             }
 
-            if(!$cli)
-            {
+            if (! $cli) {
                 //Attemp to connect using phpseclib\Net\SSH2 library.
-                try
-                {
-                    $cli = $this->getSSH2($this->ip,$credential->username,$credential->passkey);
+                try {
+                    $cli = $this->getSSH2($this->ip, $credential->username, $credential->passkey);
                 } catch (\Exception $e) {
-                    print $e->getMessage() . "\n";
+                    echo $e->getMessage()."\n";
                 }
             }
 
-            if($cli)
-            {
+            if ($cli) {
                 $this->credential_id = $credential->id;
                 $this->save();
+
                 return $cli;
             }
         }
@@ -119,14 +114,13 @@ class Device extends Model
     public static function getSSH1($ip, $username, $password)
     {
         $deviceinfo = [
-            "host"      =>  $ip,
-            "username"  =>  $username,
-            "password"  =>  $password,
+            'host'      => $ip,
+            'username'  => $username,
+            'password'  => $password,
         ];
         $cli = new SSH($deviceinfo);
         $cli->connect();
-        if($cli->connected)
-        {
+        if ($cli->connected) {
             // send the term len 0 command to stop paging output with ---more---
             $cli->exec('terminal length 0');  //Cisco
             $cli->exec('no paging');  //Aruba
@@ -138,8 +132,7 @@ class Device extends Model
     {
         //Try using phpseclib\Net\SSH2 to connect to device.
         $cli = new SSH2($ip);
-        if ($cli->login($username, $password))
-        {
+        if ($cli->login($username, $password)) {
             return $cli;
         }
     }
@@ -151,23 +144,22 @@ class Device extends Model
     */
     public function discover()
     {
-        print __CLASS__ . "\n";
+        echo __CLASS__."\n";
         $this->save();
         /*
         This goes through each SUBCLASS defined above and builds (2) arrays:
         $match = an array of classes and how many MATCHES we have (starts at 0 for each)
-        $regex = an array of regex to be used for matching.        
+        $regex = an array of regex to be used for matching.
         */
 
-        foreach(self::$singleTableSubclasses as $class)
-        {
+        foreach (self::$singleTableSubclasses as $class) {
             $match[$class] = 0;
             $tmp = explode('\\', $class);
-            $regex[$class] = "/" . end($tmp) . "/i";
+            $regex[$class] = '/'.end($tmp).'/i';
         }
 
         $cli = $this->getCli();
-        
+
         //Commands to be run on this unknown device to help us determine WHAT it is.
         $commands = [
             'sh ver',
@@ -179,13 +171,10 @@ class Device extends Model
         Go through each COMMAND and execute it. and see if it matches each of the $regex entries we have.
         If we find a match, +1 for that class.
         */
-        foreach($commands as $command)
-        {
+        foreach ($commands as $command) {
             $output = $cli->exec($command);
-            foreach($regex as $class => $reg)
-            {
-                if(preg_match($reg,$output))
-                {
+            foreach ($regex as $class => $reg) {
+                if (preg_match($reg, $output)) {
                     $match[$class]++;
                 }
             }
@@ -217,8 +206,7 @@ class Device extends Model
         $data = $this->data;
 
         //Loop through each configured command and save it's output to $data.
-        foreach($this->cmds as $key => $cmd)
-        {
+        foreach ($this->cmds as $key => $cmd) {
             $data[$key] = $cli->exec($cmd);
         }
         //save the data back to the model.
@@ -233,28 +221,24 @@ class Device extends Model
 
     public function getName()
     {
-
     }
 
     public function getSerial()
     {
-
     }
 
     public function getModel()
     {
-
     }
 
-/*     public function save($options = [])
-    {
-        $devices = Device::where("ip",$this->ip)->get();
-        if($devices->count() == 0)
+    /*     public function save($options = [])
         {
-            return parent::save($options);
-        } else {
-            throw new \Exception("Device with IP " . $this->ip . " already exists.");
-        }
-    } */
-    
+            $devices = Device::where("ip",$this->ip)->get();
+            if($devices->count() == 0)
+            {
+                return parent::save($options);
+            } else {
+                throw new \Exception("Device with IP " . $this->ip . " already exists.");
+            }
+        } */
 }

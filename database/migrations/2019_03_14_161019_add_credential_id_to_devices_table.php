@@ -14,7 +14,7 @@ class AddCredentialIdToDevicesTable extends Migration
     public function up()
     {
         Schema::table('devices', function (Blueprint $table) {
-            $table->string('credential_id')->nullable()->after("name");
+            $table->string('credential_id')->nullable()->after('name');
         });
 
         //

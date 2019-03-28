@@ -5,7 +5,7 @@ namespace App\Device\Opengear;
 use phpseclib\Net\SSH2;
 
 class Opengear extends \App\Device\Device
-{ 
+{
     protected static $singleTableSubclasses = [
     ];
 
@@ -13,11 +13,11 @@ class Opengear extends \App\Device\Device
 
     //List of commands to run during a scan of this device.
     public $cmds = [
-        ''                  =>  '/etc/scripts/support_report.sh',
-        'run'               =>  'config -g config',
-        'version'           =>  'cat /etc/version',
-        'support_report'    =>  'cat /etc/config/support_report',
-        'serial'            =>  'showserial',
+        ''                  => '/etc/scripts/support_report.sh',
+        'run'               => 'config -g config',
+        'version'           => 'cat /etc/version',
+        'support_report'    => 'cat /etc/config/support_report',
+        'serial'            => 'showserial',
     ];
 
     /*
@@ -28,19 +28,17 @@ class Opengear extends \App\Device\Device
     public function getCli()
     {
         $credentials = $this->getCredentials();
-        foreach($credentials as $credential)
-        {
+        foreach ($credentials as $credential) {
             // Attempt to connect using Metaclassing\SSH library.
-            try
-            {
+            try {
                 $cli = $this->getSSH2($this->ip, $credential->username, $credential->passkey);
             } catch (\Exception $e) {
                 //If that fails, attempt to connect using phpseclib\Net\SSH2 library.
             }
-            if($cli)
-            {
+            if ($cli) {
                 $this->credential_id = $credential->id;
                 $this->save();
+
                 return $cli;
             }
         }
@@ -51,11 +49,12 @@ class Opengear extends \App\Device\Device
     This is the end of the discovery line for this type of device.
     Instead of running another discovery, this will perform a scan() and return the object.
     Returns App\Device\Opengear\Opengear object;
-    */ 
+    */
     public function discover()
     {
-        print __CLASS__ . "\n";
+        echo __CLASS__."\n";
         $this->scan();
+
         return $this;
     }
 
@@ -66,8 +65,7 @@ class Opengear extends \App\Device\Device
     public function getName()
     {
         $reg = "/config.system.name (\S+)/";
-        if(preg_match($reg,$this->data['run'], $hits))
-        {
+        if (preg_match($reg, $this->data['run'], $hits)) {
             return $hits[1];
         }
     }
@@ -88,11 +86,8 @@ class Opengear extends \App\Device\Device
     public function getModel()
     {
         $reg = "/<model>(\S+)<\/model>/";
-        if(preg_match($reg,$this->data['support_report'], $hits))
-        {
+        if (preg_match($reg, $this->data['support_report'], $hits)) {
             return $hits[1];
         }
     }
-
-
 }

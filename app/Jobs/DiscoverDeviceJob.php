@@ -2,9 +2,9 @@
 
 namespace App\Jobs;
 
-use \App\Device\Device; 
-use Illuminate\Support\Facades\DB;
+use App\Device\Device;
 use Illuminate\Bus\Queueable;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -14,8 +14,8 @@ class DiscoverDeviceJob implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
-	public $device; 
-	
+    public $device;
+
     /**
      * Create a new job instance.
      *
@@ -23,7 +23,7 @@ class DiscoverDeviceJob implements ShouldQueue
      */
     public function __construct($id)
     {
-		$this->device = Device::findOrFail($id); 
+        $this->device = Device::findOrFail($id);
     }
 
     /**
@@ -37,5 +37,4 @@ class DiscoverDeviceJob implements ShouldQueue
 		$this->device->discover();
 		\Log::info(__FILE__, ['function' => __FUNCTION__, 'state' => 'complete', 'device_id' => $this->device->id]);   // Log device to the log file. 
     }
-
 }
