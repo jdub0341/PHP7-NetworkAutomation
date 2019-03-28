@@ -223,7 +223,7 @@ Route::apiResource('/device', 'DeviceController');
 * @SWG\Get(
 *     path="/api/device/search/{search}",
 *     tags={"Device"},
-*     summary="Get Device by Search",
+*     summary="Search for text inside device data fields using Scout",
 *     description="",
 *     operationId="",
 *     consumes={"application/json"},
