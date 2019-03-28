@@ -12,7 +12,7 @@ class Credential extends Model
     protected $fillable = [
         'name',
         'type',
-        'class', 
+        'class',
         'username',
         'passkey',
         'description',

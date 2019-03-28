@@ -16,7 +16,7 @@ class CreateCredentialsTable extends Migration
         Schema::create('credentials', function (Blueprint $table) {
             $table->increments('id');
             $table->string('name');
-            $table->string('type');            
+            $table->string('type');
             $table->string('class')->nullable();
             $table->string('username')->nullable();
             $table->string('passkey');
