@@ -231,7 +231,13 @@ class DeviceController extends Controller
 		
 		$search = $request->search; 
 		
+		// Use Laravel Scout to do the search inside its scheduled indexes. 
 		$devices = Device::search($search)->paginate($paginate);
+		
+		// If nothting is returned from Scout then use Elequent Like to do the search inside data.
+		if(!$devices){
+			$devices = Device::where('data', 'like', '%' .$search. '%')->paginate($paginate);
+		}
 		
 		return DeviceCollection::collection($devices); 
     }
