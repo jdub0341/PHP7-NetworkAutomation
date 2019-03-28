@@ -13,4 +13,4 @@ yarn-error.log
 .env
 composer.lock
 /storage/*.index
-/storage/api-docs/*.json
+/storage/api-docs
