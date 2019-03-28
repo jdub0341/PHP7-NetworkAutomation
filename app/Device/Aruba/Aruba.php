@@ -10,12 +10,12 @@ class Aruba extends \App\Device\Device
 
     //List of commands to run during a scan of this device.
     public $cmds = [
-        'run'           =>  'sh run',
-        'version'       =>  'sh version',
-        'inventory'     =>  'sh inventory',
-        'dir'           =>  'dir',
-        'cdp'           =>  'sh cdp neighbor',
-        'lldp'          =>  'sh lldp neighbor',
+        'run'           => 'sh run',
+        'version'       => 'sh version',
+        'inventory'     => 'sh inventory',
+        'dir'           => 'dir',
+        'cdp'           => 'sh cdp neighbor',
+        'lldp'          => 'sh lldp neighbor',
     ];
 
     /*
@@ -26,19 +26,17 @@ class Aruba extends \App\Device\Device
     public function getCli()
     {
         $credentials = $this->getCredentials();
-        foreach($credentials as $credential)
-        {
+        foreach ($credentials as $credential) {
             // Attempt to connect using Metaclassing\SSH library.
-            try
-            {
+            try {
                 $cli = $this->getSSH1($this->ip, $credential->username, $credential->passkey);
             } catch (\Exception $e) {
                 //If that fails, attempt to connect using phpseclib\Net\SSH2 library.
             }
-            if($cli)
-            {
+            if ($cli) {
                 $this->credential_id = $credential->id;
                 $this->save();
+
                 return $cli;
             }
         }
@@ -49,11 +47,12 @@ class Aruba extends \App\Device\Device
     This is the end of the discovery line for this type of device.
     Instead of running another discovery, this will perform a scan() and return the object.
     Returns App\Device\Aruba\Aruba object;
-    */ 
+    */
     public function discover()
     {
-        print __CLASS__ . "\n";
+        echo __CLASS__."\n";
         $this->scan();
+
         return $this;
     }
 
@@ -64,8 +63,7 @@ class Aruba extends \App\Device\Device
     public function getName()
     {
         $reg = "/hostname\s+\"(\S+)\"/";
-        if(preg_match($reg,$this->data['run'], $hits))
-        {
+        if (preg_match($reg, $this->data['run'], $hits)) {
             return $hits[1];
         }
     }
@@ -77,8 +75,7 @@ class Aruba extends \App\Device\Device
     public function getSerial()
     {
         $reg = "/System\s+Serial#\s+:\s+(\S+)/";
-        if (preg_match($reg, $this->data['inventory'], $hits))
-        {
+        if (preg_match($reg, $this->data['inventory'], $hits)) {
             return $hits[1];
         }
     }
@@ -90,8 +87,7 @@ class Aruba extends \App\Device\Device
     public function getModel()
     {
         $reg = "/SC\sModel#\s+:\s+(\S+)/";
-        if (preg_match($reg, $this->data['inventory'], $hits))
-        {
+        if (preg_match($reg, $this->data['inventory'], $hits)) {
             return $hits[1];
         }
     }

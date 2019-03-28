@@ -16,13 +16,13 @@ class CreateDevicesTable extends Migration
         Schema::create('devices', function (Blueprint $table) {
             $table->increments('id');
             $table->string('type')->nullable();
-            $table->ipAddress('ip')->nullable();            
+            $table->ipAddress('ip')->nullable();
             $table->string('name')->nullable();
             $table->json('data')->nullable();
             $table->string('vendor')->nullable();
             $table->string('model')->nullable();
             $table->string('serial')->nullable();
-			$table->softDeletes();
+            $table->softDeletes();
             $table->timestamps();
             $table->index(['type']);
             $table->index(['ip']);
@@ -30,7 +30,6 @@ class CreateDevicesTable extends Migration
             $table->index(['vendor']);
             $table->index(['model']);
             $table->index(['serial']);
-
         });
     }
 

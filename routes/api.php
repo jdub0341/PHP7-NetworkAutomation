@@ -35,6 +35,4 @@ Route::middleware('auth:api')->get('/user', function (Request $request) {
 });
 */
 
-
-
-Route::apiResource('/device', 'DeviceController'); 
+Route::apiResource('/device', 'DeviceController');

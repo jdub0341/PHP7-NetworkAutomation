@@ -2,11 +2,11 @@
 
 namespace App\Device\Cisco;
 
-use Metaclassing\SSH;
 use DB;
+use Metaclassing\SSH;
 
 class Cisco extends \App\Device\Device
-{ 
+{
     protected static $singleTableSubclasses = [
         IOS::class,
         IOSXE::class,
@@ -17,13 +17,13 @@ class Cisco extends \App\Device\Device
 
     //List of commands to run during a scan of this device.
     public $cmds = [
-        'run'           =>  'sh run',
-        'version'       =>  'sh version',
-        'interfaces'    =>  'sh interfaces',
-        'inventory'     =>  'sh inventory',
-        'dir'           =>  'dir',
-        'cdp'           =>  'sh cdp neighbor',
-        'lldp'          =>  'sh lldp neighbor',
+        'run'           => 'sh run',
+        'version'       => 'sh version',
+        'interfaces'    => 'sh interfaces',
+        'inventory'     => 'sh inventory',
+        'dir'           => 'dir',
+        'cdp'           => 'sh cdp neighbor',
+        'lldp'          => 'sh lldp neighbor',
     ];
 
     /*
@@ -34,19 +34,17 @@ class Cisco extends \App\Device\Device
     public function getCli()
     {
         $credentials = $this->getCredentials();
-        foreach($credentials as $credential)
-        {
+        foreach ($credentials as $credential) {
             // Attempt to connect using Metaclassing\SSH library.
-            try
-            {
+            try {
                 $cli = $this->getSSH1($this->ip, $credential->username, $credential->passkey);
             } catch (\Exception $e) {
                 //If that fails, attempt to connect using phpseclib\Net\SSH2 library.
             }
-            if($cli)
-            {
+            if ($cli) {
                 $this->credential_id = $credential->id;
                 $this->save();
+
                 return $cli;
             }
         }
@@ -59,39 +57,37 @@ class Cisco extends \App\Device\Device
     */
     public function discover()
     {
-        print __CLASS__ . "\n";
+        echo __CLASS__."\n";
         $this->save();
         //list of available Cisco devices types initialized to 0
         $match = [
-            'App\Device\Cisco\IOS'     =>  0,
-            'App\Device\Cisco\IOSXE'   =>  0,
-            'App\Device\Cisco\IOSXR'   =>  0,
-            'App\Device\Cisco\NXOS'    =>  0,
+            'App\Device\Cisco\IOS'     => 0,
+            'App\Device\Cisco\IOSXE'   => 0,
+            'App\Device\Cisco\IOSXR'   => 0,
+            'App\Device\Cisco\NXOS'    => 0,
         ];
 
         //Different regex to use to classify device.
         $regex = [
             'App\Device\Cisco\IOS'     => [
-                "/cisco ios software/i",
+                '/cisco ios software/i',
             ],
             'App\Device\Cisco\IOSXE'   => [
-                "/ios-xe/i",
-                "/package:/i",
+                '/ios-xe/i',
+                '/package:/i',
             ],
             'App\Device\Cisco\IOSXR'   => [
-                "/ios xr/i",
-                "/iosxr/i",
+                '/ios xr/i',
+                '/iosxr/i',
             ],
             'App\Device\Cisco\NXOS'    => [
-                "/Cisco Nexus/i",
-                "/nx-os/i",
+                '/Cisco Nexus/i',
+                '/nx-os/i',
             ],
         ];
 
         $cli = $this->getCli();
-        if(!$cli)
-        {
-
+        if (! $cli) {
         }
         //List of commands to run to classify device
         $commands = [
@@ -103,15 +99,11 @@ class Cisco extends \App\Device\Device
         Go through each COMMAND and execute it. and see if it matches each of the $regex entries we have.
         If we find a match, +1 for that class.
         */
-        foreach($commands as $command)
-        {
+        foreach ($commands as $command) {
             $output = $cli->exec($command);
-            foreach($regex as $class => $regs)
-            {
-                foreach($regs as $reg)
-                {
-                    if(preg_match($reg,$output))
-                    {
+            foreach ($regex as $class => $regs) {
+                foreach ($regs as $reg) {
+                    if (preg_match($reg, $output)) {
                         $match[$class]++;
                     }
                 }
@@ -139,8 +131,7 @@ class Cisco extends \App\Device\Device
     public function getName()
     {
         $reg = "/hostname (\S+)/";
-        if(preg_match($reg,$this->data['run'], $hits))
-        {
+        if (preg_match($reg, $this->data['run'], $hits)) {
             return $hits[1];
         }
     }
@@ -152,8 +143,7 @@ class Cisco extends \App\Device\Device
     public function getSerial()
     {
         $reg = "/^Processor board ID (\S+)/m";
-        if (preg_match($reg, $this->data['version'], $hits))
-        {
+        if (preg_match($reg, $this->data['version'], $hits)) {
             return $hits[1];
         }
     }
@@ -164,26 +154,20 @@ class Cisco extends \App\Device\Device
     */
     public function getModel()
     {
-        if (preg_match('/.*isco\s+(WS-\S+)\s.*/', $this->data['version'], $reg))
-        {
+        if (preg_match('/.*isco\s+(WS-\S+)\s.*/', $this->data['version'], $reg)) {
             return $reg[1];
         }
-        if (preg_match('/.*isco\s+(OS-\S+)\s.*/', $this->data['version'], $reg))
-        {
+        if (preg_match('/.*isco\s+(OS-\S+)\s.*/', $this->data['version'], $reg)) {
             return $reg[1];
         }
-        if (preg_match('/.*ardware:\s+(\S+),.*/', $this->data['version'], $reg))
-        {
+        if (preg_match('/.*ardware:\s+(\S+),.*/', $this->data['version'], $reg)) {
             return $reg[1];
         }
-        if (preg_match('/.*ardware:\s+(\S+).*/', $this->data['version'], $reg))
-        {
+        if (preg_match('/.*ardware:\s+(\S+).*/', $this->data['version'], $reg)) {
             return $reg[1];
         }
-        if (preg_match('/^[c,C]isco\s(\S+)\s\(.*/m', $this->data['version'], $reg))
-        {
+        if (preg_match('/^[c,C]isco\s(\S+)\s\(.*/m', $this->data['version'], $reg)) {
             return $reg[1];
         }
     }
-
 }
