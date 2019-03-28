@@ -10,6 +10,7 @@
         "fideloper/proxy": "~3.3",
         "laravel/framework": "5.5.*",
         "laravel/horizon": "2.*",
+        "laravel/scout": "^7.1",
         "laravel/tinker": "~1.0",
         "metaclassing/php7-laravel5-enterpriseauth": "dev-master",
         "metaclassing/php7-sshwrapper": "dev-master",
@@ -17,6 +18,7 @@
         "phpseclib/phpseclib": "~2.0",
         "predis/predis": "^1.1",
         "spatie/laravel-query-builder": "1.16",
+        "teamtnt/laravel-scout-tntsearch-driver": "^7.0",
         "zircote/swagger-php": "2.*"
     },
     "require-dev": {

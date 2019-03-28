@@ -12,3 +12,5 @@ npm-debug.log
 yarn-error.log
 .env
 composer.lock
+/storage/*.index
+/storage/api-docs

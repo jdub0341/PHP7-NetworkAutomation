@@ -33,8 +33,8 @@ class DiscoverDeviceJob implements ShouldQueue
      */
     public function handle()
     {
-        \Log::info('DiscoverDeviceJob', ['DiscoverDeviceJob' => 'starting', 'device_id' => $this->device->id]);   // Log device to the log file.
+        \Log::info(__FILE__, ['function' => __FUNCTION__, 'state' => 'starting', 'device_id' => $this->device->id]);   // Log device to the log file.
         $this->device->discover();
-        \Log::info('DiscoverDeviceJob', ['DiscoverDeviceJob' => 'complete', 'device_id' => $this->device->id]);   // Log device to the log file.
+        \Log::info(__FILE__, ['function' => __FUNCTION__, 'state' => 'complete', 'device_id' => $this->device->id]);   // Log device to the log file.
     }
 }
