@@ -62,7 +62,7 @@ class ScanDevice extends Command
 		$devices = Device::select('id')->get();
 		
 		foreach($devices as $device){
-			\Log::info('ScanDeviceCommand', ['ScanDeviceJob' => 'create', 'device_id' => $device['id']]);   // Log device to the log file. 
+			\Log::info(__FILE__, ['function' => __FUNCTION__, 'state' => 'create', 'device_id' => $device['id']]);   // Log device to the log file. 
 			$result = ScanDeviceJob::dispatch($device['id'])->onQueue('default');		// Create a scan job for each device in the database
 		}
 	}

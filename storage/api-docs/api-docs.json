@@ -5,12 +5,22 @@
         "version": "0.3"
     },
     "paths": {
+        "/api/hello": {
+            "get": {
+                "summary": "Hello world test for API troubleshooting",
+                "responses": {
+                    "200": {
+                        "description": "Hello world example"
+                    }
+                }
+            }
+        },
         "/api/device": {
             "get": {
                 "tags": [
                     "Device"
                 ],
-                "summary": "Get Device",
+                "summary": "Get List of Devices",
                 "description": "",
                 "operationId": "",
                 "consumes": [
@@ -118,6 +128,99 @@
                         "AzureAD": []
                     }
                 ]
+            },
+            "put": {
+                "tags": [
+                    "Device"
+                ],
+                "summary": "Update device by ID",
+                "description": "",
+                "operationId": "",
+                "consumes": [
+                    "application/x-www-form-urlencoded"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID of Device",
+                        "required": true,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "name",
+                        "in": "formData",
+                        "description": "Name of Device",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "ip",
+                        "in": "formData",
+                        "description": "IP of Device",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "type",
+                        "in": "formData",
+                        "description": "type of Device",
+                        "required": false,
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "successful operation"
+                    },
+                    "401": {
+                        "description": "Unauthorized user"
+                    }
+                },
+                "security": [
+                    {
+                        "AzureAD": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Device"
+                ],
+                "summary": "Delete by ID",
+                "description": "",
+                "operationId": "",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID",
+                        "required": true,
+                        "type": "integer"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "successful operation"
+                    },
+                    "401": {
+                        "description": "Unauthorized user"
+                    }
+                },
+                "security": [
+                    {
+                        "AzureAD": []
+                    }
+                ]
             }
         },
         "/api/device/search/{search}": {
@@ -156,16 +259,6 @@
                         "AzureAD": []
                     }
                 ]
-            }
-        },
-        "/api/hello": {
-            "get": {
-                "summary": "Hello world test for API troubleshooting",
-                "responses": {
-                    "200": {
-                        "description": "Hello world example"
-                    }
-                }
             }
         },
         "/api/me": {

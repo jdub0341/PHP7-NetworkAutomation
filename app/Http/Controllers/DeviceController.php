@@ -15,76 +15,15 @@ class DeviceController extends Controller
 	public function __construct()
 	{
 		//Require Authentication for all APIs except index and show 
-		//$this->middleware('auth:api');
+		$this->middleware('auth:api');
 	}
 	
+
 	/**
-	* @SWG\Get(
-	*     path="/api/device",
-	*     tags={"Device"},
-	*     summary="Get Device",
-	*     description="",
-	*     operationId="",
-	*     consumes={"application/json"},
-	*     produces={"application/json"},
-	*     @SWG\Parameter(
-	*         name="include",
-	*         in="query",
-	*         description="relationships to include (Comma seperated)",
-	*         required=false,
-	*         type="string"
-	*     ),
-	*     @SWG\Parameter(
-	*         name="filter[id]",
-	*         in="query",
-	*         description="id of device",
-	*         required=false,
-	*         type="string"
-	*     ),
-	*     @SWG\Parameter(
-	*         name="filter[ip]",
-	*         in="query",
-	*         description="ip of device",
-	*         required=false,
-	*         type="string"
-	*     ),
-	*     @SWG\Parameter(
-	*         name="filter[type]",
-	*         in="query",
-	*         description="type of device",
-	*         required=false,
-	*         type="string"
-	*     ),
-	*     @SWG\Parameter(
-	*         name="filter[name]",
-	*         in="query",
-	*         description="name of device",
-	*         required=false,
-	*         type="string"
-	*     ),
-	*     @SWG\Parameter(
-	*         name="filter[model]",
-	*         in="query",
-	*         description="model of device",
-	*         required=false,
-	*         type="string"
-	*     ),
-	*     @SWG\Parameter(
-	*         name="filter[serial]",
-	*         in="query",
-	*         description="serial of device",
-	*         required=false,
-	*         type="string"
-	*     ),
-	*     @SWG\Response(
-	*         response=200,
-	*         description="successful operation",
-	*     ),
-	*     security={
-	*         {"AzureAD": {}},
-	*     }
-	* )
-	**/
+     * Display a listing of the resource.
+     *
+     * @return \Illuminate\Http\Response
+     */
     public function index(Request $request)
     {
         if($request->paginate)
@@ -123,34 +62,11 @@ class DeviceController extends Controller
     }
 
 	/**
-	* @SWG\Get(
-	*     path="/api/device/{id}",
-	*     tags={"Device"},
-	*     summary="Get Device by ID",
-	*     description="",
-	*     operationId="",
-	*     consumes={"application/json"},
-	*     produces={"application/json"},
-	*     @SWG\Parameter(
-	*         name="id",
-	*         in="path",
-	*         description="ID of Device",
-	*         required=true,
-	*         type="integer"
-	*     ),
-	*     @SWG\Response(
-	*         response=200,
-	*         description="successful operation",
-	*     ),
-	*     @SWG\Response(
-	*         response="401",
-	*         description="Unauthorized user",
-	*     ),
-	*     security={
-	*         {"AzureAD": {}},
-	*     }
-	* )
-	**/
+     * Display the specified resource.
+     *
+     * @param  int  $id
+     * @return \Illuminate\Http\Response
+     */
     public function show(Device $device)
     {
         return new DeviceResource($device); 
@@ -176,50 +92,29 @@ class DeviceController extends Controller
      */
     public function update(Request $request, Device $device)
     {
-        //
+        $device->update($request->all());
+		return new DeviceResource($device); 
     }
 
     /**
      * Remove the specified resource from storage.
      *
-     * @param  \App\Model\Device  $device
+     * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function destroy(Device $device)
+    public function destroy($id)
     {
-        //
+        $device = Device::findOrFail($id);
+		$device->delete();
+		return new DeviceResource($device); 
     }
 	
-	
 	/**
-	* @SWG\Get(
-	*     path="/api/device/search/{search}",
-	*     tags={"Device"},
-	*     summary="Get Device by Search",
-	*     description="",
-	*     operationId="",
-	*     consumes={"application/json"},
-	*     produces={"application/json"},
-	*     @SWG\Parameter(
-	*         name="search",
-	*         in="path",
-	*         description="search",
-	*         required=true,
-	*         type="string"
-	*     ),
-	*     @SWG\Response(
-	*         response=200,
-	*         description="successful operation",
-	*     ),
-	*     @SWG\Response(
-	*         response="401",
-	*         description="Unauthorized user",
-	*     ),
-	*     security={
-	*         {"AzureAD": {}},
-	*     }
-	* )
-	**/
+     * Seach for text in the listing resources.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\Response
+     */
 	public function search(Request $request)
     {
 		if($request->paginate)
