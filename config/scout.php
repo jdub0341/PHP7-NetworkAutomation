@@ -55,7 +55,7 @@ return [
     */
 
     'chunk' => [
-        'searchable' => 500,
+        'searchable'   => 500,
         'unsearchable' => 500,
     ],
 
@@ -84,11 +84,11 @@ return [
     */
 
     'algolia' => [
-        'id' => env('ALGOLIA_APP_ID', ''),
+        'id'     => env('ALGOLIA_APP_ID', ''),
         'secret' => env('ALGOLIA_SECRET', ''),
     ],
-	
-	/*
+
+    /*
     |--------------------------------------------------------------------------
     | TNT Search Configuration
     |--------------------------------------------------------------------------
@@ -96,19 +96,19 @@ return [
     | Here you may configure your tntsearch settings. tntsearch is a
     | search engine library which works great with Scout out of the box.
     | https://github.com/teamtnt/laravel-scout-tntsearch-driver
-	|
+    |
     */
-	
-	'tntsearch' => [
-		'storage'  => storage_path(), //place where the index files will be stored
-		'fuzziness' => env('TNTSEARCH_FUZZINESS', false),
-		'fuzzy' => [
-			'prefix_length' => 2,
-			'max_expansions' => 50,
-			'distance' => 2
-		],
-		'asYouType' => false,
-		'searchBoolean' => env('TNTSEARCH_BOOLEAN', false),
-	],
+
+    'tntsearch' => [
+        'storage'   => storage_path(), //place where the index files will be stored
+        'fuzziness' => env('TNTSEARCH_FUZZINESS', false),
+        'fuzzy'     => [
+            'prefix_length'  => 2,
+            'max_expansions' => 50,
+            'distance'       => 2,
+        ],
+        'asYouType'     => false,
+        'searchBoolean' => env('TNTSEARCH_BOOLEAN', false),
+    ],
 
 ];
