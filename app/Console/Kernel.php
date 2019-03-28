@@ -24,13 +24,13 @@ class Kernel extends ConsoleKernel
      */
     protected function schedule(Schedule $schedule)
     {
-		\Log::info(__NAMESPACE__ . __CLASS__, ['function' => __FUNCTION__, 'state' => 'started']);   // Create log entry. 
-		
-		// Run the Scout indexing 
-		$schedule->command('scout:import App\\\Device\\\Device')->dailyAt('02:00')->environments(['staging', 'production'])->withoutOverlapping();
-		
-		// Run Netman Device Scan Hourly
-		$schedule->command('netman:scanDevice')->hourly()->environments(['staging', 'production'])->withoutOverlapping();
+        \Log::info(__NAMESPACE__.__CLASS__, ['function' => __FUNCTION__, 'state' => 'started']);   // Create log entry.
+
+        // Run the Scout indexing
+        $schedule->command('scout:import App\\\Device\\\Device')->dailyAt('02:00')->environments(['staging', 'production'])->withoutOverlapping();
+
+        // Run Netman Device Scan Hourly
+        $schedule->command('netman:scanDevice')->hourly()->environments(['staging', 'production'])->withoutOverlapping();
     }
 
     /**

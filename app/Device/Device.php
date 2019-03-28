@@ -5,24 +5,24 @@ namespace App\Device;
 use DB;
 use Metaclassing\SSH;
 use phpseclib\Net\SSH2;
-use App\Credential\Credential;
 use Laravel\Scout\Searchable;
+use App\Credential\Credential;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Nanigans\SingleTableInheritance\SingleTableInheritanceTrait;
 
 class Device extends Model
 {
-	use Searchable;	// Add for Scout to search
+    use Searchable;	// Add for Scout to search
     use SoftDeletes;
     use SingleTableInheritanceTrait;
-	
-	// Scout Searchable
-	public function toSearchableArray()
+
+    // Scout Searchable
+    public function toSearchableArray()
     {
         $array = $this->toArray();
-		$array['data'] = json_encode($array['data'], true); // Change data to json encoded for Scout tnt driver to search. Cannot do nested array search. 
-		return $array;
+        $array['data'] = json_encode($array['data'], true); // Change data to json encoded for Scout tnt driver to search. Cannot do nested array search.
+        return $array;
     }
 
     protected $table = 'devices';

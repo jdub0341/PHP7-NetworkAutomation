@@ -11,14 +11,13 @@ use App\Http\Resources\Device\DeviceCollection;
 
 class DeviceController extends Controller
 {
-	public function __construct()
-	{
-		//Require Authentication for all APIs except index and show 
-		$this->middleware('auth:api');
-	}
-	
+    public function __construct()
+    {
+        //Require Authentication for all APIs except index and show
+        $this->middleware('auth:api');
+    }
 
-	/**
+    /**
      * Display a listing of the resource.
      *
      * @return \Illuminate\Http\Response
@@ -59,7 +58,7 @@ class DeviceController extends Controller
         //
     }
 
-	/**
+    /**
      * Display the specified resource.
      *
      * @param  int  $id
@@ -91,7 +90,8 @@ class DeviceController extends Controller
     public function update(Request $request, Device $device)
     {
         $device->update($request->all());
-		return new DeviceResource($device); 
+
+        return new DeviceResource($device);
     }
 
     /**
@@ -103,35 +103,35 @@ class DeviceController extends Controller
     public function destroy($id)
     {
         $device = Device::findOrFail($id);
-		$device->delete();
-		return new DeviceResource($device); 
+        $device->delete();
+
+        return new DeviceResource($device);
     }
-	
-	/**
+
+    /**
      * Seach for text in the listing resources.
      *
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
      */
-	public function search(Request $request)
+    public function search(Request $request)
     {
-		if($request->paginate)
-        {
+        if ($request->paginate) {
             $paginate = $request->paginate;
         } else {
-            $paginate = env("DEFAULT_PAGINATION");
+            $paginate = env('DEFAULT_PAGINATION');
         }
-		
-		$search = $request->search; 
-		
-		// Use Laravel Scout to do the search inside its scheduled indexes. 
-		$devices = Device::search($search)->paginate($paginate);
-		
-		// If nothting is returned from Scout then use Elequent Like to do the search inside data.
-		if(!$devices){
-			$devices = Device::where('data', 'like', '%' .$search. '%')->paginate($paginate);
-		}
-		
-		return DeviceCollection::collection($devices); 
+
+        $search = $request->search;
+
+        // Use Laravel Scout to do the search inside its scheduled indexes.
+        $devices = Device::search($search)->paginate($paginate);
+
+        // If nothting is returned from Scout then use Elequent Like to do the search inside data.
+        if (! $devices) {
+            $devices = Device::where('data', 'like', '%'.$search.'%')->paginate($paginate);
+        }
+
+        return DeviceCollection::collection($devices);
     }
 }
