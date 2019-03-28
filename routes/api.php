@@ -188,34 +188,34 @@ Route::middleware('auth:api')->get('/user', function (Request $request) {
  */
 
 /**
-     * @SWG\Delete(
-     *     path="/api/device/{id}",
-     *     tags={"Device"},
-     *     summary="Delete by ID",
-     *     description="",
-     *     operationId="",
-     *     consumes={"application/json"},
-     *     produces={"application/json"},
-     *     @SWG\Parameter(
-     *         name="id",
-     *         in="path",
-     *         description="ID",
-     *         required=true,
-     *         type="integer"
-     *     ),
-     *     @SWG\Response(
-     *         response=200,
-     *         description="successful operation",
-     *     ),
-     *     @SWG\Response(
-     *         response="401",
-     *         description="Unauthorized user",
-     *     ),
-     *     security={
-     *         {"AzureAD": {}},
-     *     }
-     * )
-     */
+ * @SWG\Delete(
+ *     path="/api/device/{id}",
+ *     tags={"Device"},
+ *     summary="Delete by ID",
+ *     description="",
+ *     operationId="",
+ *     consumes={"application/json"},
+ *     produces={"application/json"},
+ *     @SWG\Parameter(
+ *         name="id",
+ *         in="path",
+ *         description="ID",
+ *         required=true,
+ *         type="integer"
+ *     ),
+ *     @SWG\Response(
+ *         response=200,
+ *         description="successful operation",
+ *     ),
+ *     @SWG\Response(
+ *         response="401",
+ *         description="Unauthorized user",
+ *     ),
+ *     security={
+ *         {"AzureAD": {}},
+ *     }
+ * )
+ */
 Route::apiResource('/device', 'DeviceController');
 
 /**
