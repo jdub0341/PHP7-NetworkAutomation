@@ -13,12 +13,12 @@ use Nanigans\SingleTableInheritance\SingleTableInheritanceTrait;
 
 class Device extends Model
 {
-    use Searchable;	// Add for Scout to search
+ /*    use Searchable;	// Add for Scout to search */
     use SoftDeletes;
     use SingleTableInheritanceTrait;
 
     // Scout Searchable
-    public function toSearchableArray()
+/*     public function toSearchableArray()
     {
         $array = $this->toArray();
         print_r($array);
@@ -27,7 +27,7 @@ class Device extends Model
             $array['data'] = json_encode($array['data'], true); // Change data to json encoded for Scout tnt driver to search. Cannot do nested array search.
         }
         return $array;
-    }
+    } */
 
     protected $table = 'devices';
     protected static $singleTableTypeField = 'type';
@@ -115,6 +115,11 @@ class Device extends Model
         }
     }
 
+    /*
+    This method is used to attempt an SSH V1 terminal connection to the device.
+    It will attempt to use Metaclassing\SSH library to work with specific models of devices that do not support ssh 2.0 natively.
+    If it successfully connects and detects prompt, it will return a CLI handle.
+    */
     public static function getSSH1($ip, $username, $password)
     {
         $deviceinfo = [
@@ -132,6 +137,10 @@ class Device extends Model
         }
     }
 
+    /*
+    This method is used to attempt an SSH V2 terminal connection to the device.
+    It will utilize the phpseclib\net\SSH library and return a CLI handle if successful
+    */
     public static function getSSH2($ip, $username, $password)
     {
         //Try using phpseclib\Net\SSH2 to connect to device.
@@ -148,14 +157,24 @@ class Device extends Model
     */
     public function discover()
     {
+        if($this->ip){
+            $device = Device::where("ip",$this->ip)->first();
+            if($device){
+                $device->discover();
+                return $device;
+            }
+        } else {
+            print "No IP address found!\n";
+            return false;
+        }
         echo __CLASS__."\n";
         $this->save();
+
         /*
         This goes through each SUBCLASS defined above and builds (2) arrays:
         $match = an array of classes and how many MATCHES we have (starts at 0 for each)
         $regex = an array of regex to be used for matching.
         */
-
         foreach (self::$singleTableSubclasses as $class) {
             $match[$class] = 0;
             $tmp = explode('\\', $class);

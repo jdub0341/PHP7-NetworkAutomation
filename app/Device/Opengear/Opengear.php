@@ -13,7 +13,8 @@ class Opengear extends \App\Device\Device
 
     //List of commands to run during a scan of this device.
     public $cmds = [
-        ''                  => '/etc/scripts/support_report.sh',
+
+        ''                  => 'sudo /etc/scripts/support_report.sh',
         'run'               => 'config -g config',
         'version'           => 'cat /etc/version',
         'support_report'    => 'cat /etc/config/support_report',
@@ -38,7 +39,7 @@ class Opengear extends \App\Device\Device
             if ($cli) {
                 $this->credential_id = $credential->id;
                 $this->save();
-
+                //$cli->exec("sudo -i");
                 return $cli;
             }
         }

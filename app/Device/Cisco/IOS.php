@@ -16,7 +16,6 @@ class IOS extends \App\Device\Cisco\Cisco
     {
         echo __CLASS__."\n";
         $this->scan();
-
         return $this;
     }
 }
