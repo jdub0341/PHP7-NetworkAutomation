@@ -13,12 +13,13 @@ use Nanigans\SingleTableInheritance\SingleTableInheritanceTrait;
 
 class Device extends Model
 {
- /*    use Searchable;	// Add for Scout to search */
+    //use Searchable;	// Add for Scout to search */
     use SoftDeletes;
     use SingleTableInheritanceTrait;
 
     // Scout Searchable
-/*     public function toSearchableArray()
+    /*
+    public function toSearchableArray()
     {
         $array = $this->toArray();
         print_r($array);
@@ -27,14 +28,14 @@ class Device extends Model
             $array['data'] = json_encode($array['data'], true); // Change data to json encoded for Scout tnt driver to search. Cannot do nested array search.
         }
         return $array;
-    } */
+    }*/
 
     protected $table = 'devices';
     protected static $singleTableTypeField = 'type';
     protected static $singleTableSubclasses = [
-        Aruba\Aruba::class,
-        Cisco\Cisco::class,
-        Opengear\Opengear::class,
+        \App\Device\Aruba\Aruba::class,
+        \App\Device\Cisco\Cisco::class,
+        \App\Device\Opengear\Opengear::class,
     ];
     protected static $singleTableType = __CLASS__;
 
@@ -52,12 +53,34 @@ class Device extends Model
         'data' => 'array',
     ];
 
+    public $scan_cmds = [];
+
+    public $discover_commands = [
+        'sh ver',
+        'show inventory',
+        'cat /etc/version',
+    ];
+
+    public $discover_regex = [
+        'App\Device\Aruba\Aruba'   => [
+            '/Aruba/i',
+        ],
+        'App\Device\Cisco\Cisco'     => [
+            '/Cisco/i',
+        ],
+        'App\Device\Opengear\Opengear'   => [
+            '/Opengear/i',
+        ],
+    ];
+
+    public $parser = null;
+    
+    public $parsed = null;
+
     public function credential()
     {
         return $this->hasOne('App\Credential\Credential', 'id', 'credential_id');
     }
-
-    public $cmds = [];
 
     /*
     This method is used to generate a COLLECTION of credentials to use to connect to this device.
@@ -108,7 +131,7 @@ class Device extends Model
 
             if ($cli) {
                 $this->credential_id = $credential->id;
-                $this->save();
+                //$this->save();
 
                 return $cli;
             }
@@ -157,48 +180,60 @@ class Device extends Model
     */
     public function discover()
     {
+        /*
+        If an ip doesn't exist on this object you are trying to discover, fail
+        Check if a device with this IP already exists.  If it does, grab it from the database and perform a discovery on it
+        */
         if($this->ip){
-            $device = Device::where("ip",$this->ip)->first();
-            if($device){
-                $device->discover();
-                return $device;
-            }
+            // $device = Device::where("ip",$this->ip)->first();
+            // if($device){
+            //     print "DEVICE ALREADY EXISTS!\n";
+            //     $device->discover();
+            //     return $device;
+            // }
         } else {
             print "No IP address found!\n";
             return false;
         }
-        echo __CLASS__."\n";
-        $this->save();
+
+        echo get_called_class()."\n";
+        //$this->save();
+
+        if(empty(static::$singleTableSubclasses))
+        {
+            return $this->scan();
+        }
 
         /*
-        This goes through each SUBCLASS defined above and builds (2) arrays:
+        This goes through each $discover_regex defined above and builds (1) array:
         $match = an array of classes and how many MATCHES we have (starts at 0 for each)
-        $regex = an array of regex to be used for matching.
+        Example:
+            Array
+            (
+                [App\Device\Aruba\Aruba] => 0
+                [App\Device\Cisco\Cisco] => 0
+                [App\Device\Opengear\Opengear] => 0
+            )
         */
-        foreach (self::$singleTableSubclasses as $class) {
+        foreach(static::$singleTableSubclasses as $class)
+        {
             $match[$class] = 0;
-            $tmp = explode('\\', $class);
-            $regex[$class] = '/'.end($tmp).'/i';
         }
 
         $cli = $this->getCli();
-
-        //Commands to be run on this unknown device to help us determine WHAT it is.
-        $commands = [
-            'sh ver',
-            'show inventory',
-            'cat /etc/version',
-        ];
 
         /*
         Go through each COMMAND and execute it. and see if it matches each of the $regex entries we have.
         If we find a match, +1 for that class.
         */
-        foreach ($commands as $command) {
+        foreach ($this->discover_commands as $command) {
             $output = $cli->exec($command);
-            foreach ($regex as $class => $reg) {
-                if (preg_match($reg, $output)) {
-                    $match[$class]++;
+            foreach ($this->discover_regex as $class => $regs) {
+                foreach($regs as $reg)
+                {
+                    if (preg_match($reg, $output)) {
+                        $match[$class]++;
+                    }
                 }
             }
         }
@@ -209,12 +244,15 @@ class Device extends Model
         $tmp = array_keys($match);
         //set $newtype to the TOP class in $match.
         $newtype = reset($tmp);
+        $this->save();
         //Modify the record in the DB to change the type.
         DB::table('devices')
             ->where('id', $this->id)
             ->update(['type' => $newtype]);
         //Get a fresh copy of this model from the DB (which gives us a new class type) and immediately run discover().
         $this->fresh()->discover();
+        return Device::find($this->id);
+        //return $this->refresh();
     }
 
     /*
@@ -229,7 +267,7 @@ class Device extends Model
         $data = $this->data;
 
         //Loop through each configured command and save it's output to $data.
-        foreach ($this->cmds as $key => $cmd) {
+        foreach ($this->scan_cmds as $key => $cmd) {
             $data[$key] = $cli->exec($cmd);
         }
         //save the data back to the model.
@@ -240,6 +278,8 @@ class Device extends Model
         $this->model = $this->getModel();
 
         $this->save();
+        return Device::find($this->id);
+        //return $this;
     }
 
     public function getName()
@@ -252,6 +292,25 @@ class Device extends Model
 
     public function getModel()
     {
+    }
+
+    public function parse(){
+        $cp = new $this->parser("");
+        foreach($this->data as $key=>$value){
+            $cp->input_data($value,$key);
+        }
+        $this->parsed = $cp->output;
+        return $this->parsed;
+    }
+
+    public function deduplicate()
+    {
+        $device = Device::where("name",$this->name)->orWhere("serial", $this->serial)->get();
+
+        if($device){
+            $device->discover();
+            return $device;
+        }
     }
 
     /*     public function save($options = [])

@@ -8,22 +8,45 @@ use Metaclassing\SSH;
 class Cisco extends \App\Device\Device
 {
     protected static $singleTableSubclasses = [
-        IOS::class,
-        IOSXE::class,
-        IOSXR::class,
-        NXOS::class,
+        \App\Device\Cisco\IOS::class,
+        \App\Device\Cisco\IOSXE::class,
+        \App\Device\Cisco\IOSXR::class,
+        \App\Device\Cisco\NXOS::class,
     ];
     protected static $singleTableType = __CLASS__;
 
+    public $discover_commands = [
+        'sh version',
+        'sh version running',
+    ];
+
+    public $discover_regex = [
+        'App\Device\Cisco\IOS'     => [
+            '/cisco ios software/i',
+        ],
+        'App\Device\Cisco\IOSXE'   => [
+            '/ios-xe/i',
+            '/package:/i',
+        ],
+        'App\Device\Cisco\IOSXR'   => [
+            '/ios xr/i',
+            '/iosxr/i',
+        ],
+        'App\Device\Cisco\NXOS'    => [
+            '/Cisco Nexus/i',
+            '/nx-os/i',
+        ],       
+    ];
     //List of commands to run during a scan of this device.
-    public $cmds = [
+    public $scan_cmds = [
         'run'           => 'sh run',
         'version'       => 'sh version',
         'interfaces'    => 'sh interfaces',
         'inventory'     => 'sh inventory',
         'dir'           => 'dir',
-        'cdp'           => 'sh cdp neighbor',
-        'lldp'          => 'sh lldp neighbor',
+        'cdp'           => 'sh cdp neighbor detail',
+        'lldp'          => 'sh lldp neighbor detail',
+        'mac'           => 'sh mac address-table',
     ];
 
     /*
@@ -43,85 +66,11 @@ class Cisco extends \App\Device\Device
             }
             if ($cli) {
                 $this->credential_id = $credential->id;
-                $this->save();
+                //$this->save();
 
                 return $cli;
             }
         }
-    }
-
-    /*
-    This method is used to determine the TYPE of Cisco device this is and recategorize it.
-    Once recategorized, it will perform discover() again.
-    Returns null;
-    */
-    public function discover()
-    {
-        echo __CLASS__."\n";
-        $this->save();
-        //list of available Cisco devices types initialized to 0
-        $match = [
-            'App\Device\Cisco\IOS'     => 0,
-            'App\Device\Cisco\IOSXE'   => 0,
-            'App\Device\Cisco\IOSXR'   => 0,
-            'App\Device\Cisco\NXOS'    => 0,
-        ];
-
-        //Different regex to use to classify device.
-        $regex = [
-            'App\Device\Cisco\IOS'     => [
-                '/cisco ios software/i',
-            ],
-            'App\Device\Cisco\IOSXE'   => [
-                '/ios-xe/i',
-                '/package:/i',
-            ],
-            'App\Device\Cisco\IOSXR'   => [
-                '/ios xr/i',
-                '/iosxr/i',
-            ],
-            'App\Device\Cisco\NXOS'    => [
-                '/Cisco Nexus/i',
-                '/nx-os/i',
-            ],
-        ];
-
-        $cli = $this->getCli();
-        if (! $cli) {
-        }
-        //List of commands to run to classify device
-        $commands = [
-            'sh version',
-            'sh version running',
-        ];
-
-        /*
-        Go through each COMMAND and execute it. and see if it matches each of the $regex entries we have.
-        If we find a match, +1 for that class.
-        */
-        foreach ($commands as $command) {
-            $output = $cli->exec($command);
-            foreach ($regex as $class => $regs) {
-                foreach ($regs as $reg) {
-                    if (preg_match($reg, $output)) {
-                        $match[$class]++;
-                    }
-                }
-            }
-        }
-        $cli->disconnect();
-        //sort the $match array so the class with the highest count is on top.
-        arsort($match);
-        //just grab the class names
-        $tmp = array_keys($match);
-        //set $newtype to the TOP class in $match.
-        $newtype = reset($tmp);
-        //Modify the record in the DB to change the type.
-        DB::table('devices')
-        ->where('id', $this->id)
-        ->update(['type' => $newtype]);
-        //Get a fresh copy of this model from the DB (which gives us a new class type) and immediately run discover().
-        $this->fresh()->discover();
     }
 
     /*
