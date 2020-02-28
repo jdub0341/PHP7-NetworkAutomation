@@ -6,10 +6,13 @@ use Metaclassing\SSH;
 
 class Aruba extends \App\Device\Device
 {
+    protected static $singleTableSubclasses = [
+    ];
+
     protected static $singleTableType = __CLASS__;
 
     //List of commands to run during a scan of this device.
-    public $cmds = [
+    public $scan_cmds = [
         'run'           => 'sh run',
         'version'       => 'sh version',
         'inventory'     => 'sh inventory',
@@ -40,20 +43,6 @@ class Aruba extends \App\Device\Device
                 return $cli;
             }
         }
-    }
-
-    /*
-    This method is used to determine the TYPE of Aruba device this is and recategorize it.
-    This is the end of the discovery line for this type of device.
-    Instead of running another discovery, this will perform a scan() and return the object.
-    Returns App\Device\Aruba\Aruba object;
-    */
-    public function discover()
-    {
-        echo __CLASS__."\n";
-        $this->scan();
-
-        return $this;
     }
 
     /*

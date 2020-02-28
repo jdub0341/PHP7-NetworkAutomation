@@ -12,8 +12,9 @@ class Opengear extends \App\Device\Device
     protected static $singleTableType = __CLASS__;
 
     //List of commands to run during a scan of this device.
-    public $cmds = [
-        ''                  => '/etc/scripts/support_report.sh',
+    public $scan_cmds = [
+
+        ''                  => 'sudo /etc/scripts/support_report.sh',
         'run'               => 'config -g config',
         'version'           => 'cat /etc/version',
         'support_report'    => 'cat /etc/config/support_report',
@@ -38,24 +39,10 @@ class Opengear extends \App\Device\Device
             if ($cli) {
                 $this->credential_id = $credential->id;
                 $this->save();
-
+                //$cli->exec("sudo -i");
                 return $cli;
             }
         }
-    }
-
-    /*
-    This method is used to determine the TYPE of Opengear device this is and recategorize it.
-    This is the end of the discovery line for this type of device.
-    Instead of running another discovery, this will perform a scan() and return the object.
-    Returns App\Device\Opengear\Opengear object;
-    */
-    public function discover()
-    {
-        echo __CLASS__."\n";
-        $this->scan();
-
-        return $this;
     }
 
     /*
