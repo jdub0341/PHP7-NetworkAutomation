@@ -185,6 +185,7 @@ class Device extends Model
     This method is used to determine if this devices IP is already in the database.
     Returns null;
     */
+
     public function pre_discover()
     {
         if(!$this->ip){
@@ -264,6 +265,7 @@ class Device extends Model
         $tmp = array_keys($match);
         //set $newtype to the TOP class in $match.
         $newtype = reset($tmp);
+
         //Create a new model instance of type $newtype
         $device = $newtype::make($this->toArray());
         //run discover again.
@@ -291,6 +293,44 @@ class Device extends Model
             $this->save();
             return $this;
         }
+    }
+
+    /*
+    This method is used to determine if this devices IP is already in the database.
+    Returns null;
+    */
+    public function post_discover()
+    {
+        $this->scan();
+/*         print "MY IP IS " . $this->ip . " !\n";
+        print "MY SERIAL IS " . $this->serial . " !\n";
+        print "MY NAME IS " . $this->name . " !\n"; */
+        //Check if IP is management IP of device
+        //$this->parse();
+        //$mgmtip = $this->parsed['system']['mgmt']['ip'];
+        //if($this->ip != $mgmtip)
+        //{
+        //    print "IP is not the MANAGEMENT IP of this device.  Cancelling Discovery!\n";
+        //    $this->forceDelete();
+        //} else {
+            $devices = Device::where('ip',$this->ip)
+                ->orWhere("serial", $this->serial)
+                ->orWhere("name", $this->name)
+                ->get()->except($this->id);
+            if($devices->isNotEmpty())
+            {
+                print "Device with name, serial, or IP already exists in database!  Removing new device!\n";
+                $this->forceDelete();
+                return null;
+/*                 $parsed = $device->parse();
+                $devicemgmtip = $parsed['system']['mgmt']['ip'];
+                if($devicemgmtip != $device->ip)
+                {
+                    print "Duplicate device IP doesn't match mangement IP.  Removing device from database!\n";
+                    $device->delete();
+                } */
+            }
+        //}
     }
 
     /*
@@ -338,12 +378,9 @@ class Device extends Model
     {
         $device = Device::where("name",$this->name)->orWhere("serial", $this->serial)->get();
 
-<<<<<<< HEAD
-=======
         if($device){
             $device->discover();
             return $device;
         }
     }
->>>>>>> f477e3d3944833e2746b06b0464a4288ac5243e8
 }
