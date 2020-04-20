@@ -271,7 +271,6 @@ class Device extends Model
         //run discover again.
         $device = $device->discover();
         return $device;
-
     }
 
     /*
