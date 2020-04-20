@@ -37,6 +37,7 @@ class Device extends Model
         \App\Device\Cisco\Cisco::class,
         \App\Device\Opengear\Opengear::class,
         \App\Device\Ubiquiti\Ubiquiti::class,
+
     ];
     protected static $singleTableType = __CLASS__;
 
@@ -61,6 +62,7 @@ class Device extends Model
         'show inventory',
         'cat /etc/version',
         'cat /etc/board.info',
+
     ];
 
     public $discover_regex = [
@@ -76,6 +78,7 @@ class Device extends Model
         'App\Device\Ubiquiti\Ubiquiti'   => [
             '/NBE-5AC/i',
         ],
+
     ];
 
     public $parser = null;
@@ -208,6 +211,7 @@ class Device extends Model
         If an ip doesn't exist on this object you are trying to discover, fail
         Check if a device with this IP already exists.  If it does, grab it from the database and perform a discovery on it
         */
+
         if(!$this->ip){
             print "No IP address found!\n";
             return false;
@@ -265,6 +269,7 @@ class Device extends Model
         //run discover again.
         $device = $device->discover();
         return $device;
+
     }
 
     /*
@@ -329,5 +334,16 @@ class Device extends Model
         $this->parsed = $cp->output;
         return $this->parsed;
     }
+    public function deduplicate()
+    {
+        $device = Device::where("name",$this->name)->orWhere("serial", $this->serial)->get();
 
+<<<<<<< HEAD
+=======
+        if($device){
+            $device->discover();
+            return $device;
+        }
+    }
+>>>>>>> f477e3d3944833e2746b06b0464a4288ac5243e8
 }
