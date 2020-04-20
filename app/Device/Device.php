@@ -185,25 +185,21 @@ class Device extends Model
     This method is used to determine if this devices IP is already in the database.
     Returns null;
     */
-/*     public function pre_discover()
+
+    public function pre_discover()
     {
-        if($this->ip){
-            $device = Device::where("ip",$this->ip)->first();
-            if($device){
-                print "DEVICE IP ALREADY EXISTS!\n";
-                //$device->discover();
-                //return $device;
-            } else {
-                //$this->save();
-                $this->discover();
-            }
-        } else {
+        if(!$this->ip){
             print "No IP address found!\n";
             return false;
         }
-
-        //return Device::find($this->id);
-    } */
+        $device = Device::where("ip",$this->ip)->first();
+        if($device){
+            print "DEVICE IP ALREADY EXISTS!\n";
+        } else {
+            $device = $this->discover();
+        }
+        return $device;
+    }
 
     /*
     This method is used to determine the TYPE of device this is and recategorize it.
@@ -223,7 +219,6 @@ class Device extends Model
         }
 
         echo get_called_class()."\n";
-        //$this->save();
 
         if(empty(static::$singleTableSubclasses))
         {
@@ -270,38 +265,34 @@ class Device extends Model
         $tmp = array_keys($match);
         //set $newtype to the TOP class in $match.
         $newtype = reset($tmp);
-        $this->save();
-        //Modify the record in the DB to change the type.
-        $this->reclassify($newtype);
-        //Get a fresh copy of this model from the DB (which gives us a new class type) and immediately run discover().
-        $this->fresh()->discover();
-    }
 
-    public function reclassify($newtype)
-    {
-        DB::table('devices')
-            ->where('id', $this->id)
-            ->update(['type' => $newtype]);
-    }
-
-    public function test()
-    {
-        print_r($this);
-        $this->reclassify("App\Device\Aruba\Aruba");
-        $this->refresh();
-        print_r($this);
-        print_r($this->fresh());
+        //Create a new model instance of type $newtype
+        $device = $newtype::make($this->toArray());
+        //run discover again.
+        $device = $device->discover();
+        return $device;
 
     }
 
-    public function rediscover()
+    /*
+    This method is used to determine if this devices IP is already in the database.
+    Returns null;
+    */
+    public function post_discover()
     {
-        $class = get_class();
-        print "BASE CLASS : {$class}\n";
-        $this->reclassify($class);
-        $this->fresh()->discover();
-        return Device::find($this->id);
-        //return $this->refresh();
+        $this->scan();
+        $devices = Device::where('ip',$this->ip)
+            ->orWhere("serial", $this->serial)
+            ->orWhere("name", $this->name)
+            ->get();
+        if($devices->isNotEmpty())
+        {
+            print "Device with name, serial, or IP already exists in database!  Cancelling Add to database!\n";
+            return null;
+        } else {
+            $this->save();
+            return $this;
+        }
     }
 
     /*
@@ -350,9 +341,6 @@ class Device extends Model
     public function scan()
     {
         $cli = $this->getCli();
-        //Grab a copy of our existing data.
-        //$data = $this->data;
-
         //Loop through each configured command and save it's output to $data.
         foreach ($this->scan_cmds as $key => $cmd) {
             $data[$key] = $cli->exec($cmd);
@@ -363,10 +351,7 @@ class Device extends Model
         $this->name = $this->getName();
         $this->serial = $this->getSerial();
         $this->model = $this->getModel();
-
-        $this->save();
-        return Device::find($this->id);
-        //return $this;
+        return $this;
     }
 
     public function getName()
