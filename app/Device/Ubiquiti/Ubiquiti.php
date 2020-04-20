@@ -1,10 +1,10 @@
 <?php
 
-namespace App\Device\Opengear;
+namespace App\Device\Ubiquiti;
 
 use phpseclib\Net\SSH2;
 
-class Opengear extends \App\Device\Device
+class Ubiquiti extends \App\Device\Device
 {
     protected static $singleTableSubclasses = [
     ];
@@ -13,12 +13,10 @@ class Opengear extends \App\Device\Device
 
     //List of commands to run during a scan of this device.
     public $scan_cmds = [
-
-        ''                  => 'sudo /etc/scripts/support_report.sh',
-        'run'               => 'config -g config',
+        'run'               => 'cat /tmp/system.cfg',
         'version'           => 'cat /etc/version',
-        'support_report'    => 'cat /etc/config/support_report',
-        'serial'            => 'showserial',
+        'inventory'        => 'cat /etc/board.info',
+        'wstalist'          => 'wstalist',
     ];
 
     /*
@@ -51,7 +49,7 @@ class Opengear extends \App\Device\Device
     */
     public function getName()
     {
-        $reg = "/config.system.name (\S+)/";
+        $reg = "/resolv.host.1.name=(\S+)/";
         if (preg_match($reg, $this->data['run'], $hits)) {
             return $hits[1];
         }
@@ -63,7 +61,10 @@ class Opengear extends \App\Device\Device
     */
     public function getSerial()
     {
-        return $this->data['serial'];
+        $reg = "/board.hwaddr=(\S+)/";
+        if (preg_match($reg, $this->data['board_info'], $hits)) {
+            return $hits[1];
+        }
     }
 
     /*
@@ -72,8 +73,8 @@ class Opengear extends \App\Device\Device
     */
     public function getModel()
     {
-        $reg = "/<model>(\S+)<\/model>/";
-        if (preg_match($reg, $this->data['support_report'], $hits)) {
+        $reg = "/board.model=(\S+)/";
+        if (preg_match($reg, $this->data['board_info'], $hits)) {
             return $hits[1];
         }
     }

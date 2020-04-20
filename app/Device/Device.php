@@ -13,11 +13,12 @@ use Nanigans\SingleTableInheritance\SingleTableInheritanceTrait;
 
 class Device extends Model
 {
-    use Searchable;	// Add for Scout to search
+    //use Searchable;	// Add for Scout to search */
     use SoftDeletes;
     use SingleTableInheritanceTrait;
 
     // Scout Searchable
+    /*
     public function toSearchableArray()
     {
         $array = $this->toArray();
@@ -27,14 +28,16 @@ class Device extends Model
             $array['data'] = json_encode($array['data'], true); // Change data to json encoded for Scout tnt driver to search. Cannot do nested array search.
         }
         return $array;
-    }
+    }*/
 
     protected $table = 'devices';
     protected static $singleTableTypeField = 'type';
     protected static $singleTableSubclasses = [
-        Aruba\Aruba::class,
-        Cisco\Cisco::class,
-        Opengear\Opengear::class,
+        \App\Device\Aruba\Aruba::class,
+        \App\Device\Cisco\Cisco::class,
+        \App\Device\Opengear\Opengear::class,
+        \App\Device\Ubiquiti\Ubiquiti::class,
+
     ];
     protected static $singleTableType = __CLASS__;
 
@@ -52,12 +55,40 @@ class Device extends Model
         'data' => 'array',
     ];
 
+    public $scan_cmds = [];
+
+    public $discover_commands = [
+        'sh ver',
+        'show inventory',
+        'cat /etc/version',
+        'cat /etc/board.info',
+
+    ];
+
+    public $discover_regex = [
+        'App\Device\Aruba\Aruba'   => [
+            '/Aruba/i',
+        ],
+        'App\Device\Cisco\Cisco'     => [
+            '/Cisco/i',
+        ],
+        'App\Device\Opengear\Opengear'   => [
+            '/Opengear/i',
+        ],
+        'App\Device\Ubiquiti\Ubiquiti'   => [
+            '/NBE-5AC/i',
+        ],
+
+    ];
+
+    public $parser = null;
+    
+    public $parsed = null;
+
     public function credential()
     {
         return $this->hasOne('App\Credential\Credential', 'id', 'credential_id');
     }
-
-    public $cmds = [];
 
     /*
     This method is used to generate a COLLECTION of credentials to use to connect to this device.
@@ -108,13 +139,18 @@ class Device extends Model
 
             if ($cli) {
                 $this->credential_id = $credential->id;
-                $this->save();
+                //$this->save();
 
                 return $cli;
             }
         }
     }
 
+    /*
+    This method is used to attempt an SSH V1 terminal connection to the device.
+    It will attempt to use Metaclassing\SSH library to work with specific models of devices that do not support ssh 2.0 natively.
+    If it successfully connects and detects prompt, it will return a CLI handle.
+    */
     public static function getSSH1($ip, $username, $password)
     {
         $deviceinfo = [
@@ -132,6 +168,10 @@ class Device extends Model
         }
     }
 
+    /*
+    This method is used to attempt an SSH V2 terminal connection to the device.
+    It will utilize the phpseclib\net\SSH library and return a CLI handle if successful
+    */
     public static function getSSH2($ip, $username, $password)
     {
         //Try using phpseclib\Net\SSH2 to connect to device.
@@ -142,44 +182,79 @@ class Device extends Model
     }
 
     /*
+    This method is used to determine if this devices IP is already in the database.
+    Returns null;
+    */
+
+    public function pre_discover()
+    {
+        if(!$this->ip){
+            print "No IP address found!\n";
+            return false;
+        }
+        $device = Device::where("ip",$this->ip)->first();
+        if($device){
+            print "DEVICE IP ALREADY EXISTS!\n";
+        } else {
+            $device = $this->discover();
+        }
+        return $device;
+    }
+
+    /*
     This method is used to determine the TYPE of device this is and recategorize it.
     Once recategorized, it will perform discover() again.
     Returns null;
     */
     public function discover()
     {
-        echo __CLASS__."\n";
-        $this->save();
         /*
-        This goes through each SUBCLASS defined above and builds (2) arrays:
-        $match = an array of classes and how many MATCHES we have (starts at 0 for each)
-        $regex = an array of regex to be used for matching.
+        If an ip doesn't exist on this object you are trying to discover, fail
+        Check if a device with this IP already exists.  If it does, grab it from the database and perform a discovery on it
         */
 
-        foreach (self::$singleTableSubclasses as $class) {
+        if(!$this->ip){
+            print "No IP address found!\n";
+            return false;
+        }
+
+        echo get_called_class()."\n";
+
+        if(empty(static::$singleTableSubclasses))
+        {
+            return $this->post_discover();
+        }
+
+        /*
+        This goes through each $discover_regex defined above and builds (1) array:
+        $match = an array of classes and how many MATCHES we have (starts at 0 for each)
+        Example:
+            Array
+            (
+                [App\Device\Aruba\Aruba] => 0
+                [App\Device\Cisco\Cisco] => 0
+                [App\Device\Opengear\Opengear] => 0
+            )
+        */
+        foreach(static::$singleTableSubclasses as $class)
+        {
             $match[$class] = 0;
-            $tmp = explode('\\', $class);
-            $regex[$class] = '/'.end($tmp).'/i';
         }
 
         $cli = $this->getCli();
-
-        //Commands to be run on this unknown device to help us determine WHAT it is.
-        $commands = [
-            'sh ver',
-            'show inventory',
-            'cat /etc/version',
-        ];
 
         /*
         Go through each COMMAND and execute it. and see if it matches each of the $regex entries we have.
         If we find a match, +1 for that class.
         */
-        foreach ($commands as $command) {
+        foreach ($this->discover_commands as $command) {
             $output = $cli->exec($command);
-            foreach ($regex as $class => $reg) {
-                if (preg_match($reg, $output)) {
-                    $match[$class]++;
+            foreach ($this->discover_regex as $class => $regs) {
+                foreach($regs as $reg)
+                {
+                    if (preg_match($reg, $output)) {
+                        $match[$class]++;
+                    }
                 }
             }
         }
@@ -190,12 +265,72 @@ class Device extends Model
         $tmp = array_keys($match);
         //set $newtype to the TOP class in $match.
         $newtype = reset($tmp);
-        //Modify the record in the DB to change the type.
-        DB::table('devices')
-            ->where('id', $this->id)
-            ->update(['type' => $newtype]);
-        //Get a fresh copy of this model from the DB (which gives us a new class type) and immediately run discover().
-        $this->fresh()->discover();
+
+        //Create a new model instance of type $newtype
+        $device = $newtype::make($this->toArray());
+        //run discover again.
+        $device = $device->discover();
+        return $device;
+
+    }
+
+    /*
+    This method is used to determine if this devices IP is already in the database.
+    Returns null;
+    */
+    public function post_discover()
+    {
+        $this->scan();
+        $devices = Device::where('ip',$this->ip)
+            ->orWhere("serial", $this->serial)
+            ->orWhere("name", $this->name)
+            ->get();
+        if($devices->isNotEmpty())
+        {
+            print "Device with name, serial, or IP already exists in database!  Cancelling Add to database!\n";
+            return null;
+        } else {
+            $this->save();
+            return $this;
+        }
+    }
+
+    /*
+    This method is used to determine if this devices IP is already in the database.
+    Returns null;
+    */
+    public function post_discover()
+    {
+        $this->scan();
+/*         print "MY IP IS " . $this->ip . " !\n";
+        print "MY SERIAL IS " . $this->serial . " !\n";
+        print "MY NAME IS " . $this->name . " !\n"; */
+        //Check if IP is management IP of device
+        //$this->parse();
+        //$mgmtip = $this->parsed['system']['mgmt']['ip'];
+        //if($this->ip != $mgmtip)
+        //{
+        //    print "IP is not the MANAGEMENT IP of this device.  Cancelling Discovery!\n";
+        //    $this->forceDelete();
+        //} else {
+            $devices = Device::where('ip',$this->ip)
+                ->orWhere("serial", $this->serial)
+                ->orWhere("name", $this->name)
+                ->get()->except($this->id);
+            if($devices->isNotEmpty())
+            {
+                print "Device with name, serial, or IP already exists in database!  Removing new device!\n";
+                $this->forceDelete();
+                return null;
+/*                 $parsed = $device->parse();
+                $devicemgmtip = $parsed['system']['mgmt']['ip'];
+                if($devicemgmtip != $device->ip)
+                {
+                    print "Duplicate device IP doesn't match mangement IP.  Removing device from database!\n";
+                    $device->delete();
+                } */
+            }
+        //}
     }
 
     /*
@@ -206,11 +341,8 @@ class Device extends Model
     public function scan()
     {
         $cli = $this->getCli();
-        //Grab a copy of our existing data.
-        $data = $this->data;
-
         //Loop through each configured command and save it's output to $data.
-        foreach ($this->cmds as $key => $cmd) {
+        foreach ($this->scan_cmds as $key => $cmd) {
             $data[$key] = $cli->exec($cmd);
         }
         //save the data back to the model.
@@ -219,8 +351,7 @@ class Device extends Model
         $this->name = $this->getName();
         $this->serial = $this->getSerial();
         $this->model = $this->getModel();
-
-        $this->save();
+        return $this;
     }
 
     public function getName()
@@ -235,14 +366,21 @@ class Device extends Model
     {
     }
 
-    /*     public function save($options = [])
-        {
-            $devices = Device::where("ip",$this->ip)->get();
-            if($devices->count() == 0)
-            {
-                return parent::save($options);
-            } else {
-                throw new \Exception("Device with IP " . $this->ip . " already exists.");
-            }
-        } */
+    public function parse(){
+        $cp = new $this->parser("");
+        foreach($this->data as $key=>$value){
+            $cp->input_data($value,$key);
+        }
+        $this->parsed = $cp->output;
+        return $this->parsed;
+    }
+    public function deduplicate()
+    {
+        $device = Device::where("name",$this->name)->orWhere("serial", $this->serial)->get();
+
+        if($device){
+            $device->discover();
+            return $device;
+        }
+    }
 }
