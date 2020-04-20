@@ -15,7 +15,7 @@ class Ubiquiti extends \App\Device\Device
     public $scan_cmds = [
         'run'               => 'cat /tmp/system.cfg',
         'version'           => 'cat /etc/version',
-        'board_info'        => 'cat /etc/board.info',
+        'inventory'        => 'cat /etc/board.info',
         'wstalist'          => 'wstalist',
     ];
 
