@@ -15,7 +15,7 @@ class Ubiquiti extends \App\Device\Device
     public $scan_cmds = [
         'run'               => 'cat /tmp/system.cfg',
         'version'           => 'cat /etc/version',
-        'inventory'        => 'cat /etc/board.info',
+        'inventory'         => 'cat /etc/board.info',
         'wstalist'          => 'wstalist',
     ];
 
@@ -36,7 +36,7 @@ class Ubiquiti extends \App\Device\Device
             }
             if ($cli) {
                 $this->credential_id = $credential->id;
-                $this->save();
+                //$this->save();
                 //$cli->exec("sudo -i");
                 return $cli;
             }
@@ -62,7 +62,7 @@ class Ubiquiti extends \App\Device\Device
     public function getSerial()
     {
         $reg = "/board.hwaddr=(\S+)/";
-        if (preg_match($reg, $this->data['board_info'], $hits)) {
+        if (preg_match($reg, $this->data['inventory'], $hits)) {
             return $hits[1];
         }
     }
@@ -74,7 +74,7 @@ class Ubiquiti extends \App\Device\Device
     public function getModel()
     {
         $reg = "/board.model=(\S+)/";
-        if (preg_match($reg, $this->data['board_info'], $hits)) {
+        if (preg_match($reg, $this->data['inventory'], $hits)) {
             return $hits[1];
         }
     }
