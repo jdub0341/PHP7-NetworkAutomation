@@ -183,27 +183,29 @@ class Device extends Model
 
     public function discover()
     {
-        print "discover()\n";
+        //print "discover()\n";
         if(!$this->ip){
             print "No IP address found!\n";
             return null;
         }
         if($exists = $this->deviceExists())
         {
-            print "discover() EXISTS ID : {$exists->id}\n";
+            //print "discover() EXISTS ID : {$exists->id}\n";
             $device = Device::make($exists->toArray());
             $device->id = $exists->id;
+            //print_r($device);
         } else {
+            //print "No existing device found yet....\n";
             $device = Device::make($this->toArray());
             $device->id = $this->id;
         }
-        print_r($device);
+        //print_r($device);
         //$device->type = 'App\Device\Device';
-        print "discover() DEVICE ID: {$device->id}\n";
+        //print "discover() DEVICE ID: {$device->id}\n";
         $device = $device->getType();
-        print "discover() DEVICE ID: {$device->id}\n";        
+        //print "discover() DEVICE ID: {$device->id}\n";        
         $device = $device->getOutput();
-        print "discover() PRESAVE ID : {$device->id}\n";
+        //print "discover() PRESAVE ID : {$device->id}\n";
         $exists2 = $device->deviceExists();
         if(!$device->id && $exists2)
         {
@@ -217,9 +219,9 @@ class Device extends Model
             $device->exists = 1;
         }
 
-        print "save()\n";
+        //print "save()\n";
         $device->save();
-        print "POSTSAVE ID : {$device->id}\n";
+        //print "POSTSAVE ID : {$device->id}\n";
         return $device;
     }
 
@@ -230,8 +232,8 @@ class Device extends Model
     */
     public function getType()
     {
-        print "getType()\n";
-        print "GETTYPE THIS ID: {$this->id}\n";
+        //print "getType()\n";
+        //print "GETTYPE THIS ID: {$this->id}\n";
         /*
         If an ip doesn't exist on this object you are trying to discover, fail
         Check if a device with this IP already exists.  If it does, grab it from the database and perform a discovery on it
@@ -306,7 +308,7 @@ class Device extends Model
     public function deviceExists()
     {
 
-        print "deviceExists()\n";
+        //print "deviceExists()\n";
         //print_r($this);
         //$this->getOutput();
         $device = Device::where('ip',$this->ip)
@@ -324,7 +326,7 @@ class Device extends Model
     */
     public function getOutput()
     {
-        print "getOutput()\n";
+        //print "getOutput()\n";
         $cli = $this->getCli();
         //Loop through each configured command and save it's output to $data.
         foreach ($this->scan_cmds as $key => $cmd) {
@@ -342,9 +344,9 @@ class Device extends Model
 
     public function scan()
     {
-        print "scan()\n";
+        //print "scan()\n";
         $this->getOutput();
-        print "save()\n";
+        //print "save()\n";
         $this->save();
         return $this;
     }
