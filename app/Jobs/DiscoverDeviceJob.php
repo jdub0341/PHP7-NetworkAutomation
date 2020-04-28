@@ -21,9 +21,9 @@ class DiscoverDeviceJob implements ShouldQueue
      *
      * @return void
      */
-    public function __construct($id)
+    public function __construct(Device $device)
     {
-        $this->device = Device::findOrFail($id);
+        $this->device = $device;
     }
 
     /**
@@ -33,8 +33,12 @@ class DiscoverDeviceJob implements ShouldQueue
      */
     public function handle()
     {
-        \Log::info(__FILE__, ['function' => __FUNCTION__, 'state' => 'starting', 'device_id' => $this->device->id]);   // Log device to the log file.
+        if(!$this->device->ip)
+        {
+            throw new \Exception('No IP specified!');
+        }
+        \Log::info(__FILE__, ['function' => __FUNCTION__, 'state' => 'starting', 'ip' => $this->device->ip]);   // Log device to the log file.
         $this->device->discover();
-        \Log::info(__FILE__, ['function' => __FUNCTION__, 'state' => 'complete', 'device_id' => $this->device->id]);   // Log device to the log file.
+        \Log::info(__FILE__, ['function' => __FUNCTION__, 'state' => 'complete', 'ip' => $this->device->ip]);   // Log device to the log file.
     }
 }
