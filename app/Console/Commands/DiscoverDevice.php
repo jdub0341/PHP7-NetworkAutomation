@@ -41,16 +41,18 @@ class DiscoverDevice extends Command
     public function handle()
     {
         //$arguments = $this->arguments();
-        //$options = $this->options();
-        $ip = $this->options('ip');
+        $options = $this->options();
+        $ip = $options['ip'];
         if(!$ip)
         {
             throw new \Exception('No IP specified!');
         }
 
-        $device = new Device(['ip' => $ip]);
-        \Log::info('DiscoverDeviceCommand', ['DiscoverDeviceJob' => 'starting', 'device_ip' => $device->ip]);   // Log device to the log file.
-        $result = DiscoverDeviceJob::dispatch($device);		// Create a scan job for each device in the database
+        //$device = new Device(['ip' => $ip]);
+	//print_r($device);
+        \Log::info('DiscoverDeviceCommand', ['DiscoverDeviceJob' => 'starting', 'device_ip' => $ip]);   // Log device to the log file.
+        $result = DiscoverDeviceJob::dispatch($ip);		// Create a scan job for each device in the database
+	//return $device->discover();
     }
 
 /*

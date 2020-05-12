@@ -120,6 +120,7 @@ return [
                 'balance'    => 'simple',
                 'processes'  => 50,					// Number of workers
                 'tries'      => 3,
+		'timeout'    => 300,
             ],
         ],
 
@@ -130,6 +131,7 @@ return [
                 'balance'    => 'simple',
                 'processes'  => 50,					// Number of workers
                 'tries'      => 3,
+		'timeout'    => 300,
             ],
         ],
     ],
