@@ -181,23 +181,47 @@ class Device extends Model
         }
     }
 
-    /*
-    This method is used to determine if this devices IP is already in the database.
-    Returns null;
-    */
-
-    public function pre_discover()
+    public function discover()
     {
+        //print "discover()\n";
         if(!$this->ip){
             print "No IP address found!\n";
-            return false;
+            return null;
         }
-        $device = Device::where("ip",$this->ip)->first();
-        if($device){
-            print "DEVICE IP ALREADY EXISTS!\n";
+        if($exists = $this->deviceExists())
+        {
+            //print "discover() EXISTS ID : {$exists->id}\n";
+            $device = Device::make($exists->toArray());
+            $device->id = $exists->id;
+            //print_r($device);
         } else {
-            $device = $this->discover();
+            //print "No existing device found yet....\n";
+            $device = Device::make($this->toArray());
+            $device->id = $this->id;
         }
+        //print_r($device);
+        //$device->type = 'App\Device\Device';
+        //print "discover() DEVICE ID: {$device->id}\n";
+        $device = $device->getType();
+        //print "discover() DEVICE ID: {$device->id}\n";        
+        $device = $device->getOutput();
+        //print "discover() PRESAVE ID : {$device->id}\n";
+        $exists2 = $device->deviceExists();
+        if(!$device->id && $exists2)
+        {
+            print "DEVICE WITH IP {$exists2->ip} ALREADY EXISTS!\n";
+            $device = Device::make($exists2->toArray());
+            $device->id = $exists2->id;
+            return $device->discover();
+        }
+        if($device->id)
+        {
+            $device->exists = 1;
+        }
+
+        //print "save()\n";
+        $device->save();
+        //print "POSTSAVE ID : {$device->id}\n";
         return $device;
     }
 
@@ -206,8 +230,10 @@ class Device extends Model
     Once recategorized, it will perform discover() again.
     Returns null;
     */
-    public function discover()
+    public function getType()
     {
+        //print "getType()\n";
+        //print "GETTYPE THIS ID: {$this->id}\n";
         /*
         If an ip doesn't exist on this object you are trying to discover, fail
         Check if a device with this IP already exists.  If it does, grab it from the database and perform a discovery on it
@@ -222,7 +248,8 @@ class Device extends Model
 
         if(empty(static::$singleTableSubclasses))
         {
-            return $this->post_discover();
+            //return $this->post_discover();
+            return $this;
         }
 
         /*
@@ -268,8 +295,9 @@ class Device extends Model
 
         //Create a new model instance of type $newtype
         $device = $newtype::make($this->toArray());
+        $device->id = $this->id;
         //run discover again.
-        $device = $device->discover();
+        $device = $device->getType();
         return $device;
     }
 
@@ -277,21 +305,18 @@ class Device extends Model
     This method is used to determine if this devices IP is already in the database.
     Returns null;
     */
-    public function post_discover()
+    public function deviceExists()
     {
-        $this->scan();
-        $devices = Device::where('ip',$this->ip)
+
+        //print "deviceExists()\n";
+        //print_r($this);
+        //$this->getOutput();
+        $device = Device::where('ip',$this->ip)
             ->orWhere("serial", $this->serial)
             ->orWhere("name", $this->name)
-            ->get();
-        if($devices->isNotEmpty())
-        {
-            print "Device with name, serial, or IP already exists in database!  Cancelling Add to database!\n";
-            return null;
-        } else {
-            $this->save();
-            return $this;
-        }
+            ->first();
+            //print_r($device);
+        return $device;
     }
 
     /*
@@ -299,19 +324,30 @@ class Device extends Model
     This also configures database indexes for NAME, SERIAL, and MODEL.
     returns null
     */
-    public function scan()
+    public function getOutput()
     {
+        //print "getOutput()\n";
         $cli = $this->getCli();
         //Loop through each configured command and save it's output to $data.
         foreach ($this->scan_cmds as $key => $cmd) {
             $data[$key] = $cli->exec($cmd);
         }
+        $cli->disconnect();
         //save the data back to the model.
         $this->data = $data;
         //set indexes for NAME, SERIAL, and MODEL
         $this->name = $this->getName();
         $this->serial = $this->getSerial();
         $this->model = $this->getModel();
+        return $this;
+    }
+
+    public function scan()
+    {
+        //print "scan()\n";
+        $this->getOutput();
+        //print "save()\n";
+        $this->save();
         return $this;
     }
 
@@ -334,14 +370,5 @@ class Device extends Model
         }
         $this->parsed = $cp->output;
         return $this->parsed;
-    }
-    public function deduplicate()
-    {
-        $device = Device::where("name",$this->name)->orWhere("serial", $this->serial)->get();
-
-        if($device){
-            $device->discover();
-            return $device;
-        }
     }
 }

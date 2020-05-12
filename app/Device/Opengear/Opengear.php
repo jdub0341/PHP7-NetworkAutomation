@@ -38,7 +38,7 @@ class Opengear extends \App\Device\Device
             }
             if ($cli) {
                 $this->credential_id = $credential->id;
-                $this->save();
+                //$this->save();
                 //$cli->exec("sudo -i");
                 return $cli;
             }

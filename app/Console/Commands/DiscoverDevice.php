@@ -14,7 +14,7 @@ class DiscoverDevice extends Command
      *
      * @var string
      */
-    protected $signature = 'netman:discoverDevice {ip?} {--username=} {--password=}';
+    protected $signature = 'netman:discoverDevice {--ip=} {--username=} {--password=}';
 
     /**
      * The console command description.
@@ -40,40 +40,39 @@ class DiscoverDevice extends Command
      */
     public function handle()
     {
-        $arguments = $this->arguments();
-
-        if ($arguments['ip']) {
-            if ($this->check_if_ip_exists_in_db($arguments['ip'])) {		// Check if IP already exists in the devices table.
-                throw new \Exception('IP already exists.');
-            }
-
-            $device = Device::create($arguments);
-
-            $this->discoverDeviceJob($device->id);
-        // $device->discover();		// Uncommment if you want to do manually.
-        } else {
-            // Check seedIPs if no IP is provided.
-            if (! $this->getIPs()) {
-                throw new \Exception('No IPs provided to scan.');
-            }
-
-            $this->seedIPs($arguments);
+        //$arguments = $this->arguments();
+        $options = $this->options();
+        $ip = $options['ip'];
+        if(!$ip)
+        {
+            throw new \Exception('No IP specified!');
         }
+
+        //$device = new Device(['ip' => $ip]);
+	//print_r($device);
+        \Log::info('DiscoverDeviceCommand', ['DiscoverDeviceJob' => 'starting', 'device_ip' => $ip]);   // Log device to the log file.
+        $result = DiscoverDeviceJob::dispatch($ip);		// Create a scan job for each device in the database
+	//return $device->discover();
     }
 
+/*
     // Create a job in the queue for the device arguments.
     public function discoverDeviceJob($id)
     {
         \Log::info('DiscoverDeviceCommand', ['DiscoverDeviceJob' => 'starting', 'device_id' => $id]);   // Log device to the log file.
         $result = DiscoverDeviceJob::dispatch($id)->onQueue('default');		// Create a scan job for each device in the database
     }
+/**/
 
+/*
     // Check if ip currently exists in the database.
     public function check_if_ip_exists_in_db($ip)
     {
         return $devices = Device::where('ip', $ip)->count();
     }
+/**/
 
+ /*
     // Seed IPs in to discover by putting them into the getIPs function.
     public function seedIPs($arguments)
     {
@@ -91,6 +90,7 @@ class DiscoverDevice extends Command
             $this->discoverDeviceJob($device->id);
         }
     }
+    /**/
 
     // Can place IPs in array to create a discover job for each.
     public function getIPs()
