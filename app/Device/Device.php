@@ -120,6 +120,11 @@ class Device extends Model
         $cli = null;
         //Get our collection of credentials to attempt and foreach them.
         $credentials = $this->getCredentials();
+        if(!$credentials)
+        {
+            print "No Credentials found!\n";
+            throw("No Credentials found!");
+        }
         foreach ($credentials as $credential) {
             // Attempt to connect using Metaclassing\SSH library.
             try {

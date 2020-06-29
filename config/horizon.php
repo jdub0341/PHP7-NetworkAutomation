@@ -118,7 +118,7 @@ return [
                 'connection' => 'redis',
                 'queue'      => ['default'],
                 'balance'    => 'simple',
-                'processes'  => 50,					// Number of workers
+                'processes'  => env("WORKERS"),					// Number of workers
                 'tries'      => 3,
 		'timeout'    => 300,
             ],
@@ -129,7 +129,7 @@ return [
                 'connection' => 'redis',
                 'queue'      => ['default'],
                 'balance'    => 'simple',
-                'processes'  => 50,					// Number of workers
+                'processes'  => env("WORKERS"),					// Number of workers
                 'tries'      => 3,
 		'timeout'    => 300,
             ],

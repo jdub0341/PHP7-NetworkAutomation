@@ -7,21 +7,21 @@ use App\Device\Device;
 use App\Jobs\ScanDeviceJob;
 use Illuminate\Console\Command;
 
-class ScanDevice extends Command
+class ScanAllDevices extends Command
 {
     /**
      * The name and signature of the console command.
      *
      * @var string
      */
-    protected $signature = 'netman:scanDevice {id?}';
+    protected $signature = 'netman:scanAllDevices';
 
     /**
      * The console command description.
      *
      * @var string
      */
-    protected $description = 'Scan Device by ID';
+    protected $description = 'Scan All Devices';
 
     /**
      * Create a new command instance.
@@ -40,17 +40,12 @@ class ScanDevice extends Command
      */
     public function handle()
     {
-        $arguments = $this->arguments();
-        $id = $arguments['id'];
-        if(!$id)
+        $devices = Device::all();
+        foreach($devices as $device)
         {
-            throw new \Exception('No ID specified!');
+            \Log::info('ScanDeviceCommand', ['ScanDeviceJob' => 'starting', 'device_id' => $device->id]);   // Log device to the log file.
+            ScanDeviceJob::dispatch($device->id);		// Create a scan job for each device in the database
         }
-
-        \Log::info('ScanDeviceCommand', ['ScanDeviceJob' => 'starting', 'device_id' => $id]);   // Log device to the log file.
-        $result = ScanDeviceJob::dispatch($id);		// Create a scan job for each device in the database
-        return $result;
-
     }
 
 }
