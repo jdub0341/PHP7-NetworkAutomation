@@ -14,3 +14,5 @@ yarn-error.log
 composer.lock
 /storage/*.index
 /storage/api-docs
+/etc
+after.sh

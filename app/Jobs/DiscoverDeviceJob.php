@@ -14,16 +14,16 @@ class DiscoverDeviceJob implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
-    public $ip;
+    public $options;
 
-    /**
+     /**
      * Create a new job instance.
      *
      * @return void
      */
-    public function __construct($ip)
+    public function __construct($options)
     {
-        $this->ip = $ip;
+        $this->options = $options;
     }
 
     /**
@@ -33,13 +33,16 @@ class DiscoverDeviceJob implements ShouldQueue
      */
     public function handle()
     {
-        if(!$this->ip)
+        if($this->options['id'])
         {
-            throw new \Exception('No IP specified!');
+            $device = Device::findOrFail($this->options['id']);
         }
-        \Log::info(__FILE__, ['function' => __FUNCTION__, 'state' => 'starting', 'ip' => $this->ip]);   // Log device to the log file.
-        $device = new Device(['ip' => $this->ip]);
+        if($this->options['ip'])
+        {
+            $device = new Device(['ip' => $this->options['ip']]);
+        }
+        \Log::info(__FILE__, ['function' => __FUNCTION__, 'state' => 'starting', 'ip' => $device->ip]);   // Log device to the log file.
         $device->discover();
-        \Log::info(__FILE__, ['function' => __FUNCTION__, 'state' => 'complete', 'ip' => $this->ip]);   // Log device to the log file.
+        \Log::info(__FILE__, ['function' => __FUNCTION__, 'state' => 'complete', 'ip' => $device->ip]);   // Log device to the log file.
     }
 }
