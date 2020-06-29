@@ -15,7 +15,6 @@ class DiscoverDevice extends Command
      * @var string
      */
     protected $signature = 'netman:discoverDevice {--ip=} {--id=} {--username=} {--password=}';
-
     /**
      * The console command description.
      *
@@ -49,5 +48,4 @@ class DiscoverDevice extends Command
         $result = DiscoverDeviceJob::dispatch($options);		// Create a scan job for each device in the database
         return $result;
     }
-
 }

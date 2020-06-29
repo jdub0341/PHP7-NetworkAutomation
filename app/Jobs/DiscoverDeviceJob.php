@@ -16,7 +16,7 @@ class DiscoverDeviceJob implements ShouldQueue
 
     public $options;
 
-    /**
+     /**
      * Create a new job instance.
      *
      * @return void
