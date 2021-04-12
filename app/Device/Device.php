@@ -10,6 +10,7 @@ use App\Credential\Credential;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Nanigans\SingleTableInheritance\SingleTableInheritanceTrait;
+use Illuminate\Support\Facades\Cache;
 
 class Device extends Model
 {
@@ -208,13 +209,20 @@ class Device extends Model
         //$device->type = 'App\Device\Device';
         //print "discover() DEVICE ID: {$device->id}\n";
         $device = $device->getType();
+        if(!$device)
+        {
+            print "Unable to get Device Type!\n";
+            Cache::store('discovery')->put($this->ip,0,15);
+            return null;
+        }
+        Cache::store('discovery')->put($this->ip,1,15);
         //print "discover() DEVICE ID: {$device->id}\n";        
         $device = $device->getOutput();
         //print "discover() PRESAVE ID : {$device->id}\n";
         $exists2 = $device->deviceExists();
         if(!$device->id && $exists2)
         {
-            print "DEVICE WITH IP {$exists2->ip} ALREADY EXISTS!\n";
+            print "DEVICE ALREADY EXISTS WITH IP: {$exists2->ip}, NAME: {$exists2->name}, SERIAL: {$exists2->serial}!\n";
             $device = Device::make($exists2->toArray());
             $device->id = $exists2->id;
             return $device->discover();
@@ -274,7 +282,11 @@ class Device extends Model
         }
 
         $cli = $this->getCli();
-
+        if(!$cli)
+        {
+            print "Unable to get CLI!\n";
+            return null;
+        }
         /*
         Go through each COMMAND and execute it. and see if it matches each of the $regex entries we have.
         If we find a match, +1 for that class.
@@ -312,16 +324,37 @@ class Device extends Model
     */
     public function deviceExists()
     {
-
         //print "deviceExists()\n";
         //print_r($this);
         //$this->getOutput();
-        $device = Device::where('ip',$this->ip)
+/*         $device = Device::where('ip',$this->ip)
             ->orWhere("serial", $this->serial)
             ->orWhere("name", $this->name)
-            ->first();
-            //print_r($device);
-        return $device;
+            ->first(); */
+
+        $device1 = Device::where('ip',$this->ip)->first();
+        if($device1)
+        {
+            return $device1;
+        }
+        if($this->serial)
+        {
+            $device2 = Device::where("serial", $this->serial)->first();
+            if($device2)
+            {
+                return $device2;
+            }
+        }
+        if($this->name)
+        {
+            $device3 = Device::where("name", $this->name)->first();
+            if($device3)
+            {
+                return $device3;
+            }
+        }
+        //print_r($device);
+        //return $device;
     }
 
     /*

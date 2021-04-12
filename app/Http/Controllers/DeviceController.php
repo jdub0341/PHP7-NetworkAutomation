@@ -24,6 +24,11 @@ class DeviceController extends Controller
      */
     public function index(Request $request)
     {
+        $user = auth()->user();
+		if ($user->cant('read', Device::class)) {
+			abort(401, 'You are not authorized');
+        }
+
         if ($request->paginate) {
             $paginate = $request->paginate;
         } else {
@@ -44,7 +49,7 @@ class DeviceController extends Controller
      */
     public function create()
     {
-        //
+
     }
 
     /**
@@ -55,7 +60,10 @@ class DeviceController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        $user = auth()->user();
+		if ($user->cant('create', Device::class)) {
+			abort(401, 'You are not authorized');
+        }
     }
 
     /**
@@ -66,6 +74,11 @@ class DeviceController extends Controller
      */
     public function show(Device $device)
     {
+        $user = auth()->user();
+		if ($user->cant('read', Device::class)) {
+			abort(401, 'You are not authorized');
+        }
+
         return new DeviceResource($device);
     }
 
@@ -89,6 +102,11 @@ class DeviceController extends Controller
      */
     public function update(Request $request, Device $device)
     {
+        $user = auth()->user();
+		if ($user->cant('update', Device::class)) {
+			abort(401, 'You are not authorized');
+        }
+
         $device->update($request->all());
 
         return new DeviceResource($device);
@@ -102,6 +120,11 @@ class DeviceController extends Controller
      */
     public function destroy($id)
     {
+        $user = auth()->user();
+		if ($user->cant('delete', Device::class)) {
+			abort(401, 'You are not authorized');
+        }
+
         $device = Device::findOrFail($id);
         $device->delete();
 

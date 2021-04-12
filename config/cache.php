@@ -70,7 +70,11 @@ return [
 
         'redis' => [
             'driver'     => 'redis',
-            'connection' => 'default',
+            'connection' => 'cache',
+        ],
+        'discovery' => [
+            'driver'    => 'redis',
+            'connection' => 'discovery',
         ],
 
     ],
@@ -90,5 +94,6 @@ return [
         'CACHE_PREFIX',
         str_slug(env('APP_NAME', 'laravel'), '_').'_cache'
     ),
+
 
 ];

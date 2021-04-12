@@ -47,6 +47,7 @@ class Cisco extends \App\Device\Device
         'cdp'           => 'sh cdp neighbor detail',
         'lldp'          => 'sh lldp neighbor detail',
         'mac'           => 'sh mac address-table',
+        'arp'           => 'sh ip arp',
     ];
 
     /*

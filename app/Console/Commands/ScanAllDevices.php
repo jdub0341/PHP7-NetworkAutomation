@@ -40,7 +40,7 @@ class ScanAllDevices extends Command
      */
     public function handle()
     {
-        $devices = Device::all();
+        $devices = Device::select('id')->get();
         foreach($devices as $device)
         {
             \Log::info('ScanDeviceCommand', ['ScanDeviceJob' => 'starting', 'device_id' => $device->id]);   // Log device to the log file.

@@ -77,4 +77,5 @@ class Opengear extends \App\Device\Device
             return $hits[1];
         }
     }
+
 }
