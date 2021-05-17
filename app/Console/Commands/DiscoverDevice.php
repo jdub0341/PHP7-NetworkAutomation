@@ -6,6 +6,7 @@ use App\Jobs;
 use App\Device\Device;
 use App\Jobs\DiscoverDeviceJob;
 use Illuminate\Console\Command;
+use Illuminate\Support\Facades\Log;
 
 class DiscoverDevice extends Command
 {
@@ -44,7 +45,7 @@ class DiscoverDevice extends Command
         {
             throw new \Exception('No IP or ID specified!');
         }
-        \Log::info('DiscoverDeviceCommand', ['DiscoverDeviceJob' => 'starting', 'device_id' => $options['id'],'device_ip' => $options['ip']]);   // Log device to the log file.
+        Log::info('DiscoverDeviceCommand', ['DiscoverDeviceJob' => 'starting', 'device_id' => $options['id'],'device_ip' => $options['ip']]);   // Log device to the log file.
         $result = DiscoverDeviceJob::dispatch($options);		// Create a scan job for each device in the database
         return $result;
     }

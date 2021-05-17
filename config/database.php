@@ -78,12 +78,12 @@ return [
             'prefix'   => '',
         ],
 
-        'redis' => [
-            'driver'      => 'redis',
-            'connection'  => 'default',
-            'queue'       => '{default}',
-            'retry_after' => 90,
-        ],
+        //'redis' => [
+        //    'driver'      => 'redis',
+        //    'connection'  => 'default',
+        //    'queue'       => '{default}',
+        //    'retry_after' => 90,
+        //],
 
     ],
 
@@ -113,20 +113,43 @@ return [
 
     'redis' => [
 
-        'client' => 'predis',
+        'client' => 'phpredis',
 
         'default' => [
             'host'     => env('REDIS_HOST', '127.0.0.1'),
             'password' => env('REDIS_PASSWORD', null),
             'port'     => env('REDIS_PORT', 6379),
-            'database' => env('REDIS_DB', 0),
+            'database' => 0,
+            'prefix' => 'd:',
         ],
 
         'cache' => [
             'host'     => env('REDIS_HOST', '127.0.0.1'),
             'password' => env('REDIS_PASSWORD', null),
             'port'     => env('REDIS_PORT', 6379),
-            'database' => env('REDIS_CACHE_DB', 1),
+            'database' => 0,
+            'prefix' => 'c:',
+        ],
+        'session' => [
+            'host'     => env('REDIS_HOST', '127.0.0.1'),
+            'password' => env('REDIS_PASSWORD', null),
+            'port'     => env('REDIS_PORT', 6379),
+            'database' => 0,
+            'prefix' => 's:',
+        ],
+        'queue' => [
+            'host'     => env('REDIS_HOST', '127.0.0.1'),
+            'password' => env('REDIS_PASSWORD', null),
+            'port'     => env('REDIS_PORT', 6379),
+            'database' => 0,
+            'prefix' => 'q:',
+        ],
+        'discovery' => [
+            'host'     => env('REDIS_HOST', '127.0.0.1'),
+            'password' => env('REDIS_PASSWORD', null),
+            'port'     => env('REDIS_PORT', 6379),
+            'database' => 0,
+            'prefix' => 'dis:',
         ],
 
     ],
