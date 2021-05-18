@@ -16,14 +16,14 @@ class AutoDiscoverDevice extends Command
      *
      * @var string
      */
-    protected $signature = 'netman:autoDiscoverDevice {--ip=} {--id=} {--username=} {--password=}';
+    protected $signature = 'netman:autoDiscoverDevice {--ip=}';
 
     /**
      * The console command description.
      *
      * @var string
      */
-    protected $description = 'Auto Device Discover device by ip address. Username and password can be passed in optional';
+    protected $description = 'Auto Device Discover device by ip address.';
 
     /**
      * Create a new command instance.
@@ -42,27 +42,27 @@ class AutoDiscoverDevice extends Command
      */
     public function handle()
     {
-        $options = $this->options();
-        if(!$options['ip'])
+        //$options = $this->options();
+        if(!$this->option('ip'))
         {
             throw new \Exception('No IP specified!');
         }
-        $status = Cache::store('discovery')->get($options['ip']);
+        $status = Cache::store('discovery')->get($this->option('ip'));
         print "status: " . $status . "\n";
         if($status === "0" || $status === "1")
         {
             return null;
         }
-        Cache::store('discovery')->put($options['ip']);
+        Cache::store('discovery')->put($this->option('ip'),15);
 
-        $device = new Device(['ip' => $options['ip']]);
+        $device = new Device(['ip' => $this->option('ip')]);
         if($device->deviceExists())
         {
             return null;
         }
 
-        Log::info('DiscoverDeviceCommand', ['DiscoverDeviceJob' => 'starting', 'device_id' => $options['id'],'device_ip' => $options['ip']]);   // Log device to the log file.
-        $result = DiscoverDeviceJob::dispatch($options);		// Create a scan job for each device in the database
+        Log::info('DiscoverDeviceCommand', ['DiscoverDeviceJob' => 'starting', 'device_ip' => $this->option('ip')]);   // Log device to the log file.
+        $result = DiscoverDeviceJob::dispatch(['ip' => $this->option('ip')]);           // Create a scan job for each device in the database
         return $result;
     }
 

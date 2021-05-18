@@ -40,18 +40,10 @@ class processTcpdump extends Command
         while ( !feof(STDIN) )                  // Loop while there is a STDIN stream
         {
             $LINE = fgets(STDIN, 8192);     // Get a line of input to process
-            $REGEX = "/^(\S+)\s+IP\s+(\d+\.\d+\.\d+\.\d+)\.(\d+)\s>\s(\d+\.\d+\.\d+\.\d+)\.(\d+):\s(.+)$/";
+            $REGEX = "/^\S+\s+IP\s+(\d+\.\d+\.\d+\.\d+)\.\d+\s>\s\d+\.\d+\.\d+\.\d+\.\d+:\s.+$/";
             if ( preg_match($REGEX,$LINE,$MATCH) )
             {
-                    // process the output:
-                    //$TIME         = $MATCH[1];    // Who cares?
-                    $SRC_IP         = $MATCH[2];
-                    //$SRC_PORT     = $MATCH[3];    // Who cares?
-                    $DST_IP         = $MATCH[4];
-                    $DST_PORT       = $MATCH[5];
-                    //$EXTRA        = $MATCH[6];    // Who cares?
-                echo $SRC_IP;
-                $this->call('netman:AutoDiscoverDevice',['--ip' => $SRC_IP]);
+                $this->call('netman:AutoDiscoverDevice',['--ip' => $MATCH[1]]);
             }
         }
     }
