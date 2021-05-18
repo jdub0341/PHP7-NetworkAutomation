@@ -53,7 +53,7 @@ class AutoDiscoverDevice extends Command
         {
             return null;
         }
-        Cache::store('discovery')->put($this->option('ip'),15);
+        Cache::store('discovery')->put($this->option('ip'),0,15);
 
         $device = new Device(['ip' => $this->option('ip')]);
         if($device->deviceExists())
