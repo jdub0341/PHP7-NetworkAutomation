@@ -305,8 +305,18 @@ class Device extends Model
         $cli->disconnect();
         //sort the $match array so the class with the highest count is on top.
         arsort($match);
+        foreach($match as $key => $value)
+        {
+            $tmp = $value;
+            //If there is no matches found, device cannot be discovered!
+            if($value === 0)
+            {
+                return null;
+            }
+            break;
+        }
         //just grab the class names
-        $tmp = array_keys($match);
+        //$tmp = array_keys($match);
         //set $newtype to the TOP class in $match.
         $newtype = reset($tmp);
 
