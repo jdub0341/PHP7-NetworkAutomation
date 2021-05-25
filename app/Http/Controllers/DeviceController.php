@@ -2,12 +2,13 @@
 
 namespace App\Http\Controllers;
 
-use App\Device\Device;
+use App\Device\Device as Model;
 use Illuminate\Http\Request;
-use Spatie\QueryBuilder\Filter;
-use Spatie\QueryBuilder\QueryBuilder;
-use App\Http\Resources\Device\DeviceResource;
-use App\Http\Resources\Device\DeviceCollection;
+//use Spatie\QueryBuilder\Filter;
+//use Spatie\QueryBuilder\QueryBuilder;
+use App\Http\Resources\Device\DeviceResource as Resource;
+use App\Http\Resources\Device\DeviceCollection as ResourceCollection;
+use App\Queries\DeviceQuery as Query;
 
 class DeviceController extends Controller
 {
@@ -25,21 +26,25 @@ class DeviceController extends Controller
     public function index(Request $request)
     {
         $user = auth()->user();
-		if ($user->cant('read', Device::class)) {
+		if ($user->cant('read', Model::class)) {
 			abort(401, 'You are not authorized');
         }
 
-        if ($request->paginate) {
-            $paginate = $request->paginate;
-        } else {
-            $paginate = env('DEFAULT_PAGINATION');
-        }
-        $devices = QueryBuilder::for(Device::class)
-            ->allowedFilters(Filter::exact('id'), Filter::exact('ip'), Filter::exact('type'), Filter::exact('name'), Filter::exact('model'), Filter::exact('serial'))
-            //->allowedIncludes('part','vendor','warranty')
-            ->paginate($paginate);
+        //Apply proper queries and retrieve a LengthAwarePaginator object.
+        $paginator = Query::apply($request);
+        //Create a new ResourceCollection object.
+        //return new ResourceCollection($paginator);
+/*         $rc = new ResourceCollection($paginator);
+        print_r($rc);
+        return $rc; */
 
-        return DeviceCollection::collection($devices);
+        //Save the Collection to a tmp variable
+        $tmp = $paginator->getCollection();
+        //Create a new ResourceCollection object.
+        $resource = new ResourceCollection($paginator);
+        //Overwrite the resource collection so that it is proper type of Collection Type;
+        $resource->collection = $tmp;
+        return $resource;
     }
 
     /**
@@ -61,7 +66,7 @@ class DeviceController extends Controller
     public function store(Request $request)
     {
         $user = auth()->user();
-		if ($user->cant('create', Device::class)) {
+		if ($user->cant('create', Model::class)) {
 			abort(401, 'You are not authorized');
         }
     }
@@ -72,14 +77,14 @@ class DeviceController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function show(Device $device)
+    public function show(Model $device)
     {
         $user = auth()->user();
-		if ($user->cant('read', Device::class)) {
+		if ($user->cant('read', Model::class)) {
 			abort(401, 'You are not authorized');
         }
 
-        return new DeviceResource($device);
+        return new Resource($device);
     }
 
     /**
@@ -88,7 +93,7 @@ class DeviceController extends Controller
      * @param  \App\Model\Device  $device
      * @return \Illuminate\Http\Response
      */
-    public function edit(Device $device)
+    public function edit(Model $device)
     {
         //
     }
@@ -100,16 +105,16 @@ class DeviceController extends Controller
      * @param  \App\Model\Device  $device
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, Device $device)
+    public function update(Request $request, Model $device)
     {
         $user = auth()->user();
-		if ($user->cant('update', Device::class)) {
+		if ($user->cant('update', Model::class)) {
 			abort(401, 'You are not authorized');
         }
 
         $device->update($request->all());
 
-        return new DeviceResource($device);
+        return new Resource($device);
     }
 
     /**
@@ -121,14 +126,14 @@ class DeviceController extends Controller
     public function destroy($id)
     {
         $user = auth()->user();
-		if ($user->cant('delete', Device::class)) {
+		if ($user->cant('delete', Model::class)) {
 			abort(401, 'You are not authorized');
         }
 
-        $device = Device::findOrFail($id);
+        $device = Model::findOrFail($id);
         $device->delete();
 
-        return new DeviceResource($device);
+        return new Resource($device);
     }
 
     /**
@@ -148,13 +153,13 @@ class DeviceController extends Controller
         $search = $request->search;
 
         // Use Laravel Scout to do the search inside its scheduled indexes.
-        $devices = Device::search($search)->paginate($paginate);
+        $devices = Model::search($search)->paginate($paginate);
 
         // If nothting is returned from Scout then use Elequent Like to do the search inside data.
         if (! $devices) {
-            $devices = Device::where('data', 'like', '%'.$search.'%')->paginate($paginate);
+            $devices = Model::where('data', 'like', '%'.$search.'%')->paginate($paginate);
         }
 
-        return DeviceCollection::collection($devices);
+        return ResourceCollection::collection($devices);
     }
 }

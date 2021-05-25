@@ -15,6 +15,6 @@ class IOS extends \App\Device\Cisco\Cisco
     public $discover_regex = [
     ];
 
-    public $parser = "\ohtarr\CiscoIosParse";
+    public $parser = "\ohtarr\Cisco\IOS\Parser";
 
 }

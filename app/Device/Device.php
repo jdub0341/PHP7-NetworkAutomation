@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Nanigans\SingleTableInheritance\SingleTableInheritanceTrait;
 use Illuminate\Support\Facades\Cache;
+use App\Collections\DeviceCollection as Collection;
 
 class Device extends Model
 {
@@ -85,6 +86,11 @@ class Device extends Model
     public $parser = null;
     
     public $parsed = null;
+
+    public function newCollection(array $models = []) 
+    { 
+       return new Collection($models);
+    }
 
     public function credential()
     {
@@ -307,7 +313,7 @@ class Device extends Model
         arsort($match);
         foreach($match as $key => $value)
         {
-            $tmp = $value;
+            $newtype = $key;
             //If there is no matches found, device cannot be discovered!
             if($value === 0)
             {
@@ -318,7 +324,7 @@ class Device extends Model
         //just grab the class names
         //$tmp = array_keys($match);
         //set $newtype to the TOP class in $match.
-        $newtype = reset($tmp);
+        //$newtype = reset($tmp);
 
         //Create a new model instance of type $newtype
         $device = $newtype::make($this->toArray());
@@ -419,4 +425,5 @@ class Device extends Model
         $this->parsed = $cp->output;
         return $this->parsed;
     }
+
 }

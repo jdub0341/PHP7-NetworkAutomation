@@ -9,6 +9,6 @@ class IOSXE extends \App\Device\Cisco\Cisco
     
     protected static $singleTableType = __CLASS__;
  
-    public $parser = "\ohtarr\CiscoIosxeParse";
+    public $parser = "\ohtarr\Cisco\IOS\Parser";
  
 }
