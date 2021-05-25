@@ -2,9 +2,9 @@
 
 namespace App\Http\Resources\Device;
 
-use Illuminate\Http\Resources\Json\Resource;
+use Illuminate\Http\Resources\Json\ResourceCollection;
 
-class DeviceCollection extends Resource
+class DeviceCollection extends ResourceCollection
 {
     /**
      * Transform the resource collection into an array.
@@ -14,7 +14,20 @@ class DeviceCollection extends Resource
      */
     public function toArray($request)
     {
-        return parent::toArray($request);
+
+        if($request->has('parsed'))
+        {
+            //print_r($this->collection);
+            $this->collection->parsed();
+        }
+        return [
+            'data'  =>  $this->collection,
+        ];
+
+
+
+
+        //return parent::toArray($request);
 
         // Return a custom return for each object in the collection. We do this by extending resource
 /*
