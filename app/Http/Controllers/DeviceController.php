@@ -32,18 +32,14 @@ class DeviceController extends Controller
 
         //Apply proper queries and retrieve a LengthAwarePaginator object.
         $paginator = Query::apply($request);
-        //Create a new ResourceCollection object.
-        //return new ResourceCollection($paginator);
-/*         $rc = new ResourceCollection($paginator);
-        print_r($rc);
-        return $rc; */
-
+        
         //Save the Collection to a tmp variable
         $tmp = $paginator->getCollection();
         //Create a new ResourceCollection object.
         $resource = new ResourceCollection($paginator);
         //Overwrite the resource collection so that it is proper type of Collection Type;
         $resource->collection = $tmp;
+        //$resource->collection = $paginator->getCollection();
         return $resource;
     }
 
