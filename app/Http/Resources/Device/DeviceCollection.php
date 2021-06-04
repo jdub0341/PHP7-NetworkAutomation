@@ -20,6 +20,13 @@ class DeviceCollection extends ResourceCollection
             //print_r($this->collection);
             $this->collection->parsed();
         }
+
+/*         if($request->has('data'))
+        {
+            //print_r($this->collection);
+            $this->collection->withoutData();
+        } */
+
         return [
             'data'  =>  $this->collection,
         ];

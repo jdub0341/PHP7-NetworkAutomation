@@ -59,6 +59,21 @@ class Device extends Model
 
     public $scan_cmds = [];
 
+    public static $columns = [
+        'id',
+        'type',
+        'ip',
+        'name',
+        'credential_id',
+        'vendor',
+        'model',
+        'serial',
+        'deleted_at',
+        'created_at',
+        'updated_at',
+        'data',
+    ];
+
     public $discover_commands = [
         'sh ver',
         'show inventory',
@@ -90,6 +105,16 @@ class Device extends Model
     public function newCollection(array $models = []) 
     { 
        return new Collection($models);
+    }
+
+    public function scopeSelectData($query, $data)
+    {
+        return $query->addselect('data->' . $data . ' as ' . $data);
+    }
+
+    public static function getColumns()
+    {
+        return self::$columns;
     }
 
     public function credential()
@@ -382,6 +407,7 @@ class Device extends Model
     {
         //print "getOutput()\n";
         $cli = $this->getCli();
+        $cli->setTimeout(30);
         //Loop through each configured command and save it's output to $data.
         foreach ($this->scan_cmds as $key => $cmd) {
             $data[$key] = $cli->exec($cmd);
@@ -424,6 +450,12 @@ class Device extends Model
         }
         $this->parsed = $cp->output;
         return $this->parsed;
+    }
+
+    public function withoutData()
+    {
+        unset($this->data);
+        return $this;
     }
 
 }

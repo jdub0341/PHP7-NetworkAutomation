@@ -14,4 +14,11 @@ class DeviceCollection extends Collection
         });
     }
 
+    public function withoutData()
+    {
+        return $this->transform(function ($item, $key) {
+            return $item->withoutData();
+        });
+    }
+
 }
